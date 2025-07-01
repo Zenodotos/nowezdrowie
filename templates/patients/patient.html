@@ -1,0 +1,11 @@
+{% if patients %}
+{% for patient in patients %}
+<p>
+jest: 
+    {{patient.get_decrypted_full_name}}
+    {{ patient.get_masked_pesel }}
+</p>
+{% endfor %}
+{% else %}
+<p>nie ma pacjenta</p>
+{% endif %}

@@ -1,0 +1,57 @@
+ {% extends 'base.html' %}\
+
+ {% block content %}
+ 
+ <div class="h-screen flex justify-center items-center">
+
+            <div class="card card-xl w-100  shadow-lg">
+                
+                <div class="card-body">
+                    <p class="text-3xl">Witaj {{ user.first_name|default:user.username }}!</p>
+          
+                    {% if messages %}
+                        {% for message in messages %}
+                          <div role="alert" class="alert alert-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{message}}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="mb-4 text-sm">
+                        <p>Wprowadź 6-cyfrowy kod z aplikacji Google Authenticator</p>
+                    </div> 
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input type="text" name="token" class="input text-center" 
+                                   placeholder="000 000" maxlength="6" pattern="[0-9]{6}" 
+                                   style="letter-spacing: 0.5em; font-size: 1.5rem;" autocomplete="off" required autofocus>
+                        </div>
+                        <button type="submit" class="btn btn-success w-full">
+                             Zweryfikuj
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{% url 'users:login' %}" class="btn btn-link">
+                            <i class="fas fa-arrow-left"></i> Powrót do logowania
+                        </a>
+                    </div>
+                </div>
+                </div>
+
+                
+
+<script>
+// Auto-formatowanie kodu (opcjonalnie)
+document.querySelector('input[name="token"]').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 6) value = value.substr(0, 6);
+    e.target.value = value;
+});
+</script>
+{% endblock %}
