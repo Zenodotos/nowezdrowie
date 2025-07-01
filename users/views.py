@@ -12,6 +12,7 @@ import qrcode
 from io import BytesIO
 import base64
 from .models import User
+import pyotp
 
 
 class TwoFactorLoginView(LoginView):
@@ -39,6 +40,13 @@ class TwoFactorLoginView(LoginView):
 
 
 def setup_2fa_required(request):
+
+    tenant_name = getattr(request, 'tenant', None)
+    if tenant_name:
+        tenant_label = tenant_name.name      
+    else:
+        tenant_label = 'Moje Zdrowie'
+    
     user_id = request.session.get('pre_2fa_user_id')
     if request.user.is_authenticated:
         return redirect('users:dashboard')
@@ -68,9 +76,13 @@ def setup_2fa_required(request):
     
     if not device:
         return redirect('users:login')
-    
+    secret = base64.b32encode(device.bin_key).decode()
+    totp = pyotp.TOTP(secret)
     # Generuj QR kod
-    provisioning_uri = device.config_url
+    provisioning_uri = totp.provisioning_uri(
+        name=user.username,
+        issuer_name=tenant_label
+    )
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(provisioning_uri)
     qr.make(fit=True)
@@ -184,3 +196,6 @@ def dashboard(request):
     user = request.user
     context = {'user': user}
     return render(request, 'users/dashboard.html', context)
+
+def home(request):
+    return redirect('users:dashboard')

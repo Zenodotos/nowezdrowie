@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+  <section class="hero min-h-screen bg-gradient-to-r from-primary to-secondary text-white">
+    <div class="hero-content text-center">
+      <div class="max-w-xl">
+        <h1 class="text-5xl font-bold">Moje Zdrowie</h1>
+        <p class="py-6">Nowoczesne i intuicyjne oprogramowanie do zarządzania przychodnią. Monitoruj pacjentów, terminy i zasoby w jednym miejscu.</p>
+        <div class="flex justify-center gap-4">
+          <a href="#features" class="btn btn-lg btn-primary">Poznaj funkcje</a>
+          <a href="#contact" class="btn btn-lg btn-outline btn-accent">Skontaktuj się</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-4 lg:px-20">
+    <h2 class="text-4xl font-semibold text-center mb-12">Kluczowe Funkcje</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div class="card shadow-lg p-6">
+        <div class="text-primary text-4xl mb-4">👥</div>
+        <h3 class="text-2xl font-semibold mb-2">Zarządzanie Pacjentami</h3>
+        <p>Elektroniczne rekordy pacjentów, historia wizyt i notatki medyczne.</p>
+      </div>
+      <div class="card shadow-lg p-6">
+        <div class="text-secondary text-4xl mb-4">📅</div>
+        <h3 class="text-2xl font-semibold mb-2">Kalendarz Wizyt</h3>
+        <p>Elastyczne umawianie i przypomnienia o wizytach.</p>
+      </div>
+      <div class="card shadow-lg p-6">
+        <div class="text-primary text-4xl mb-4">💊</div>
+        <h3 class="text-2xl font-semibold mb-2">Zarządzanie Lekami</h3>
+        <p>Kontrola zapasów leków i automatyczne zamówienia.</p>
+      </div>
+      <div class="card shadow-lg p-6">
+        <div class="text-secondary text-4xl mb-4">📈</div>
+        <h3 class="text-2xl font-semibold mb-2">Raporty i Analityka</h3>
+        <p>Szczegółowe raporty wydajności i statystyki pacjentów.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="py-20 bg-base-200 px-4 lg:px-20">
+    <h2 class="text-4xl font-semibold text-center mb-12">Opinie Klientów</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="card bg-white shadow p-6">
+        <blockquote>
+          <p class="italic">"Moje Zdrowie zrewolucjonizowało sposób, w jaki prowadzimy naszą przychodnię. Obsługa pacjentów nigdy nie była tak prosta!"</p>
+        </blockquote>
+        <div class="mt-4">
+          <p class="font-bold">dr Anna Kowalska</p>
+          <p class="text-sm text-gray-500">Przychodnia ZdrowiePlus</p>
+        </div>
+      </div>
+      <div class="card bg-white shadow p-6">
+        <blockquote>
+          <p class="italic">"Świetny interfejs i doskonałe wsparcie techniczne. Polecam każdej placówce medycznej!"</p>
+        </blockquote>
+        <div class="mt-4">
+          <p class="font-bold">mgr Jan Nowak</p>
+          <p class="text-sm text-gray-500">Centrum Medyczne Nova</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action Section -->
+  <section id="contact" class="py-20 text-center px-4 lg:px-20">
+    <h2 class="text-4xl font-semibold mb-6">Gotowy, aby usprawnić swoją przychodnię?</h2>
+    <p class="mb-8">Skontaktuj się z nami już dziś i umów bezpłatną prezentację.</p>
+    <a href="mailto:kontakt@mojezdrowie.pl" class="btn btn-primary btn-lg">Napisz do nas</a>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-6 bg-base-300 text-center">
+    <p>&copy; 2025 Moje Zdrowie. Wszelkie prawa zastrzeżone.</p>
+  </footer>
+
+
+{% endblock %}

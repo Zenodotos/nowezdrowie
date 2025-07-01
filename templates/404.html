@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="h-screen flex flex-col justify-center items-center bg-base-200 text-center p-4">
+  <div class="max-w-sm w-full">
+    <div class="card bg-base-100 shadow-2xl">
+      <div class="card-body">
+        <h1 class="text-6xl font-extrabold text-primary mb-2">404</h1>
+        <p class="text-xl mb-4">Ups! Strona nie została znaleziona.</p>
+        <p class="mb-6 text-sm text-gray-500">Wygląda na to, że link jest uszkodzony lub strona została usunięta.</p>
+        <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Wróć na stronę główną</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-etqh2s8#v0*czd49@7cp47s1*e^-3pcm^6&tj28a+u(5exis2d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
-INSTALLED_APPS = [
+SHARED_APPS = [
+    'django_tenants',
+    'tenants',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +54,32 @@ INSTALLED_APPS = [
     'theme',
 ]
 
+TENANT_APPS = [
+        'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'encrypted_model_fields',
+    'django_browser_reload',
+
+    'users',
+    'encrypted_fields',
+    'patients',
+    'visits',
+    'examinations',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
+    'tailwind',
+    'theme',
+]
+
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
 MIDDLEWARE = [
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -83,17 +110,28 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'zrowie.wsgi.application'
 
+PUBLIC_SCHEMA_URLCONF = "zrowie.urls_public"
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django_tenants.postgresql_backend',
+        'NAME': 'nowezdrowie',
+        'USER': 'postgres',
+        'PASSWORD': 'root',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
+TENANT_MODEL = "tenants.Tenant" # app.Model
+
+TENANT_DOMAIN_MODEL = "tenants.Domain"  # app.Model
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -158,3 +196,5 @@ NPM_BIN_PATH = r'C:\Program Files\nodejs\npm.cmd'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 LOGOUT_REDIRECT_URL = '/login/'
+
+SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
