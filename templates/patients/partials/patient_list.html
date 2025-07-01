@@ -1,0 +1,20 @@
+{% if patients %}
+  <div class="grid gap-4">
+    {% for p in patients %}
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+          <h2 class="card-title">{{ p.get_decrypted_full_name }}</h2>
+          <div class="space-x-2">
+            <span class="badge badge-outline">PESEL: {{ p.get_masked_pesel }}</span>
+            <span class="badge badge-outline">ur. {{ p.date_of_birth }}</span>
+            <span class="badge badge-outline">wiek: {{ p.age }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center py-10 text-base-content/50">
+    Brak wyników.
+  </div>
+{% endif %}

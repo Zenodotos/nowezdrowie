@@ -1,0 +1,38 @@
+{% extends 'users/staff_base.html' %}
+
+{% block inner_content %}
+  <h1 class="text-3xl font-bold mb-4">Pacjenci</h1>
+
+  <div class="flex flex-wrap items-center justify-between mb-6 gap-2">
+    <input
+      type="text"
+      name="q"
+      placeholder="Szukaj…"
+      class="input input-bordered flex-grow max-w-xs"
+      hx-get="{% url 'patients:list' %}"
+      hx-trigger="keyup changed delay:500ms"
+      hx-target="#patient-list"
+      autocomplete="off"
+    />
+    <!-- przycisk otwierający modal -->
+    <label for="patient-modal" class="btn btn-primary modal-button">
+      Dodaj pacjenta
+    </label>
+  </div>
+
+  <!-- lista -->
+  <div id="patient-list">
+    {% include "patients/partials/patient_list.html" %}
+  </div>
+
+  <!-- modal DaisyUI -->
+  <input type="checkbox" id="patient-modal" class="modal-toggle">
+  <div class="modal">
+    <div class="modal-box relative">
+      <label for="patient-modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+      <div id="modal-body">
+        <!-- HTMX wstrzyknie tu formularz -->
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,40 @@
+<form
+  method="post"
+  hx-post="{% url 'patients:create' %}"
+  hx-target="#patient-list"
+  hx-swap="outerHTML"
+  class="space-y-4"
+>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-control">
+    {{ form.pesel_encrypted.label_tag }}
+    {{ form.pesel_encrypted }}
+    {{ form.pesel_encrypted.errors }}
+  </div>
+  <div class="form-control">
+    {{ form.first_name_encrypted.label_tag }}
+    {{ form.first_name_encrypted }}
+    {{ form.first_name_encrypted.errors }}
+  </div>
+  <div class="form-control">
+    {{ form.last_name_encrypted.label_tag }}
+    {{ form.last_name_encrypted }}
+    {{ form.last_name_encrypted.errors }}
+  </div>
+  <div class="form-control">
+    {{ form.email.label_tag }}
+    {{ form.email }}
+    {{ form.email.errors }}
+  </div>
+  <div class="form-control">
+    {{ form.phone.label_tag }}
+    {{ form.phone }}
+    {{ form.phone.errors }}
+  </div>
+
+  <div class="modal-action">
+    <button type="submit" class="btn btn-success">Zapisz</button>
+    <label for="patient-modal" class="btn">Anuluj</label>
+  </div>
+</form>
