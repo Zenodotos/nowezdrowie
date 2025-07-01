@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="navbar bg-base-100 shadow-sm">
+<div class="navbar bg-base-100 shadow-sm mb-[2em]">
   <div class="navbar-start">
     <div class="dropdown">
       <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -21,11 +21,11 @@
         <li><a>Item 3</a></li>
       </ul>
     </div>
-    <a class="btn btn-ghost text-xl">{% if request.tenant %}{{ request.tenant.name }}{% else %}Moje zdrowie{% endif %}</a>
+    <a href="{% url 'users:home' %}" class="btn btn-ghost text-xl">{% if request.tenant %}{{ request.tenant.name }}{% else %}Moje zdrowie{% endif %}</a>
   </div>
   <div class="navbar-center hidden lg:flex">
     <ul class="menu menu-horizontal px-1">
-      <li><a>Item 1</a></li>
+      <li><a href="{% url 'patients:list' %}">Pacjenci</a></li>
       <li>
         <details>
           <summary>Parent</summary>

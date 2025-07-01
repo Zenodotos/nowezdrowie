@@ -1,40 +1,45 @@
-<form
-  method="post"
-  hx-post="{% url 'patients:create' %}"
-  hx-target="#patient-list"
-  hx-swap="outerHTML"
-  class="space-y-4"
->
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <div class="form-control">
-    {{ form.pesel_encrypted.label_tag }}
-    {{ form.pesel_encrypted }}
-    {{ form.pesel_encrypted.errors }}
-  </div>
-  <div class="form-control">
-    {{ form.first_name_encrypted.label_tag }}
-    {{ form.first_name_encrypted }}
-    {{ form.first_name_encrypted.errors }}
-  </div>
-  <div class="form-control">
-    {{ form.last_name_encrypted.label_tag }}
-    {{ form.last_name_encrypted }}
-    {{ form.last_name_encrypted.errors }}
-  </div>
-  <div class="form-control">
-    {{ form.email.label_tag }}
-    {{ form.email }}
-    {{ form.email.errors }}
-  </div>
-  <div class="form-control">
-    {{ form.phone.label_tag }}
-    {{ form.phone }}
-    {{ form.phone.errors }}
-  </div>
+{% extends 'users/staff_base.html' %}
 
-  <div class="modal-action">
-    <button type="submit" class="btn btn-success">Zapisz</button>
-    <label for="patient-modal" class="btn">Anuluj</label>
+{% block inner_content %}
+ <div class="max-w-md mx-auto">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h1 class="text-xl font-semibold mb-4">Nowy pacjent</h1>
+
+        {# non-field errors jako alert daisyUI #}
+        {% if form.non_field_errors %}
+          <div class="alert alert-error shadow-lg mb-4">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none"
+                   viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                   d="M18.364 5.636l-12.728 12.728M5.636 5.636l12.728 12.728"/></svg>
+              <span>{{ form.non_field_errors.0 }}</span>
+            </div>
+          </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="space-y-4">
+            {% for field in form %}
+              <div>
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                  <label class="label">
+                    <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
+                  </label>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="card-actions justify-end mt-6">
+            <a href="{% url 'patients:list' %}" class="btn">Anuluj</a>
+            <button type="submit" class="btn btn-primary">Zapisz</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
-</form>
+{% endblock %}

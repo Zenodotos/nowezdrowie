@@ -1,38 +1,101 @@
 {% extends 'users/staff_base.html' %}
-
 {% block inner_content %}
-  <h1 class="text-3xl font-bold mb-4">Pacjenci</h1>
-
-  <div class="flex flex-wrap items-center justify-between mb-6 gap-2">
-    <input
-      type="text"
-      name="q"
-      placeholder="Szukaj…"
-      class="input input-bordered flex-grow max-w-xs"
-      hx-get="{% url 'patients:list' %}"
-      hx-trigger="keyup changed delay:500ms"
-      hx-target="#patient-list"
-      autocomplete="off"
-    />
-    <!-- przycisk otwierający modal -->
-    <label for="patient-modal" class="btn btn-primary modal-button">
-      Dodaj pacjenta
-    </label>
-  </div>
-
-  <!-- lista -->
-  <div id="patient-list">
-    {% include "patients/partials/patient_list.html" %}
-  </div>
-
-  <!-- modal DaisyUI -->
-  <input type="checkbox" id="patient-modal" class="modal-toggle">
-  <div class="modal">
-    <div class="modal-box relative">
-      <label for="patient-modal" class="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
-      <div id="modal-body">
-        <!-- HTMX wstrzyknie tu formularz -->
-      </div>
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">Pacjenci</h1>
+  <a href="{% url 'patients:create' %}" class="btn btn-primary">Dodaj nowego</a>
+</div>
+<form method="get" class="mb-4">
+  <div class="form-control">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ q }}" placeholder="Szukaj…"
+             class="input input-bordered " autocomplete="off" />
+      <button type="submit" class="btn btn-square">🔍</button>
     </div>
   </div>
+</form>
+<table class="table w-full">
+  <thead>
+    <tr>
+      <th>{% with field="name" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">Imię i nazwisko ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">Imię i nazwisko ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">Imię i nazwisko</a>
+        {% endif %}
+      {% endwith %}</th>
+      <th>{% with field="pesel" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">PESEL ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">PESEL ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">PESEL</a>
+        {% endif %}
+      {% endwith %}</th>
+      <th>{% with field="dob" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">Data ur. ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">Data ur. ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">Data ur.</a>
+        {% endif %}
+      {% endwith %}</th>
+      <th>{% with field="age" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">Wiek ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">Wiek ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">Wiek</a>
+        {% endif %}
+      {% endwith %}</th>
+      <th>{% with field="email" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">Email ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">Email ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">Email</a>
+        {% endif %}
+      {% endwith %}</th>
+      <th>{% with field="phone" %}
+        {% if sort == field %}
+          <a href="?q={{ q }}&sort=-{{ field }}">Telefon ▲</a>
+        {% elif sort == "-"|add:field %}
+          <a href="?q={{ q }}&sort={{ field }}">Telefon ▼</a>
+        {% else %}
+          <a href="?q={{ q }}&sort={{ field }}">Telefon</a>
+        {% endif %}
+      {% endwith %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in patients %}
+      <tr>
+        <td>{{ p.get_decrypted_full_name }}</td>
+        <td><span class="badge badge-secondary">{{ p.get_masked_pesel }}</span></td>
+        <td>{{ p.date_of_birth }}</td>
+        <td><span class="badge badge-primary">{{ p.age }} lat</span></td>
+        <td>{{ p.email }}</td>
+        <td>{{ p.phone }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center">Brak pacjentów.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if is_paginated %}
+<div class="mt-6 flex justify-center">
+  <div class="btn-group">
+    {% if page_obj.has_previous %}<a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" class="btn">←</a>{% else %}<button class="btn btn-disabled">←</button>{% endif %}
+    {% for num in paginator.page_range %}
+      {% if num == page_obj.number %}<button class="btn btn-active">{{ num }}</button>{% else %}<a href="?q={{ q }}&sort={{ sort }}&page={{ num }}" class="btn">{{ num }}</a>{% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}<a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" class="btn">→</a>{% else %}<button class="btn btn-disabled">→</button>{% endif %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}
