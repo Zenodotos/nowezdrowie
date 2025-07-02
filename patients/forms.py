@@ -6,25 +6,25 @@ class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = [
-            'first_name',
-            'last_name', 
-            'pesel',
+            'first_name_encrypted',
+            'last_name_encrypted', 
+            'pesel_encrypted',
             'email',
             'phone',
         ]
         
         widgets = {
-            'first_name': forms.TextInput(attrs={
+            'first_name_encrypted': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
                 'placeholder': 'Wprowadź imię pacjenta',
                 'required': True
             }),
-            'last_name': forms.TextInput(attrs={
+            'last_name_encrypted': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
                 'placeholder': 'Wprowadź nazwisko pacjenta',
                 'required': True
             }),
-            'pesel': forms.TextInput(attrs={
+            'pesel_encrypted': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
                 'placeholder': 'Wprowadź PESEL (11 cyfr)',
                 'maxlength': '11',
@@ -42,15 +42,15 @@ class PatientForm(forms.ModelForm):
         }
         
         labels = {
-            'first_name': 'Imię',
-            'last_name': 'Nazwisko',
-            'pesel': 'PESEL',
+            'first_name_encrypted': 'Imię',
+            'last_name_encrypted': 'Nazwisko',
+            'pesel_encrypted': 'PESEL',
             'email': 'Adres email',
             'phone': 'Telefon',
         }
 
-    def clean_pesel(self):
-        pesel = self.cleaned_data.get('pesel')
+    def clean_pesel_encrypted(self):
+        pesel = self.cleaned_data.get('pesel_encrypted')
         if pesel:
             # Usuwamy spacje i myślniki
             pesel = pesel.replace(' ', '').replace('-', '')
@@ -58,6 +58,12 @@ class PatientForm(forms.ModelForm):
             # Sprawdzamy czy to 11 cyfr
             if not pesel.isdigit() or len(pesel) != 11:
                 raise forms.ValidationError('PESEL musi składać się z 11 cyfr.')
+            
+            # Używamy walidacji z modelu Patient
+            try:
+                Patient.validate_pesel(pesel)
+            except Exception as e:
+                raise forms.ValidationError(str(e))
                 
         return pesel
 
