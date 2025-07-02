@@ -1,5 +1,5 @@
-<div id="patient-table-container">
-  <table class="table w-full">
+<div id="patient-table-container" class="overflow-x-auto">
+  <table class="table table-zebra">
     <thead>
       <tr>
         <th>
@@ -118,35 +118,7 @@
             {% endif %}
           {% endwith %}
         </th>
-        <th>
-          {% with field="gender" %}
-            {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Płeć ▲
-              </a>
-            {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Płeć ▼
-              </a>
-            {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Płeć
-              </a>
-            {% endif %}
-          {% endwith %}
-        </th>
+        <th>Płeć</th>
         <th>
           {% with field="email" %}
             {% if sort == field %}
@@ -205,34 +177,92 @@
             {% endif %}
           {% endwith %}
         </th>
+        <th>Akcje</th>
       </tr>
     </thead>
     <tbody>
       {% for p in patients %}
-        <tr class="hover">
-          <td>{{ p.get_decrypted_full_name }}</td>
-          <td><span class="badge badge-neutral badge-outline bold">{{ p.get_decrypted_pesel }}</span></td>
-          <td>{{ p.date_of_birth }}</td>
-          <td><span class="badge badge-primary">{{ p.age }} lat</span></td>
+        <tr class="hover cursor-pointer" onclick="window.location='{% url 'patients:detail' p.pk %}'">
+          <td class="font-medium">{{ p.get_decrypted_full_name }}</td>
+          <td>
+            <span class="badge badge-neutral badge-outline font-mono text-sm">
+              {{ p.get_decrypted_pesel }}
+            </span>
+          </td>
+          <td>{{ p.date_of_birth|date:"d.m.Y" }} r.</td>
+          <td>
+            <span class="badge badge-primary ">{{ p.age }} lat</span>
+          </td>
           <td>
             {% if p.gender == 'M' %}
-              <span class="badge badge-info">M</span>
+              <span class="badge badge-info ">M</span>
             {% elif p.gender == 'K' %}
-              <span class="badge badge-secondary">K</span>
+              <span class="badge badge-secondary ">K</span>
             {% else %}
-              <span class="badge badge-ghost">{{ p.gender|default:"-" }}</span>
+              <span class="badge badge-ghost ">{{ p.gender|default:"-" }}</span>
             {% endif %}
           </td>
-          <td>{{ p.email|default:"-" }}</td>
-          <td>{{ p.phone|default:"-" }}</td>
+          <td>
+            {% if p.email %}
+              <p>
+                {{ p.email }}
+              </p>
+            {% else %}
+              <span class="text-base-content/50">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if p.phone %}
+              <p>
+                {{ p.phone }}
+              </p>
+            {% else %}
+              <span class="text-base-content/50">-</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="flex gap-2" onclick="event.stopPropagation();">
+              <a href="{% url 'patients:detail' p.pk %}" 
+                 class="btn btn-ghost btn-sm" 
+                 title="Wyświetl szczegóły">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </a>
+              <a href="{% url 'patients:edit' p.pk %}" 
+                 class="btn btn-ghost btn-sm" 
+                 title="Edytuj pacjenta">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </a>
+            </div>
+          </td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="7" class="text-center text-base-content/50 py-8">
+          <td colspan="8" class="text-center text-base-content/50 py-12">
             {% if q %}
-              Nie znaleziono pacjentów dla zapytania "{{ q }}"
+              <div class="flex flex-col items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <div>
+                  <p class="font-medium">Nie znaleziono pacjentów</p>
+                  <p class="text-sm">dla zapytania "{{ q }}"</p>
+                </div>
+              </div>
             {% else %}
-              Brak pacjentów w systemie
+              <div class="flex flex-col items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <div>
+                  <p class="font-medium">Brak pacjentów w systemie</p>
+                  <p class="text-sm">Dodaj pierwszego pacjenta, aby rozpocząć</p>
+                </div>
+              </div>
             {% endif %}
           </td>
         </tr>
@@ -249,14 +279,20 @@
            hx-target="#patient-table-container"
            hx-push-url="true"
            class="btn">
-          ←
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
         </a>
       {% else %}
-        <button class="btn btn-disabled">←</button>
+        <button class="btn btn-disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
       {% endif %}
       
       {% for num in paginator.page_range %}
-        {% if forloop.counter0 < 10 %}  {# Limitujemy liczbę wyświetlanych stron #}
+        {% if forloop.counter0 < 10 %}
           {% if num == page_obj.number %}
             <button class="btn btn-active">{{ num }}</button>
           {% else %}
@@ -277,10 +313,16 @@
            hx-target="#patient-table-container"
            hx-push-url="true"
            class="btn">
-          →
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
         </a>
       {% else %}
-        <button class="btn btn-disabled">→</button>
+        <button class="btn btn-disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       {% endif %}
     </div>
   </div>

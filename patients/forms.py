@@ -49,6 +49,18 @@ class PatientForm(forms.ModelForm):
             'phone': 'Telefon',
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Jeśli to edycja, ustaw wartości z odszyfrowanych danych
+        if self.instance and self.instance.pk:
+            try:
+                self.initial['first_name_encrypted'] = self.instance.first_name_encrypted
+                self.initial['last_name_encrypted'] = self.instance.last_name_encrypted
+                self.initial['pesel_encrypted'] = self.instance.pesel_encrypted
+            except:
+                pass
+    
     def clean_pesel_encrypted(self):
         pesel = self.cleaned_data.get('pesel_encrypted')
         if pesel:
@@ -64,13 +76,18 @@ class PatientForm(forms.ModelForm):
                 Patient.validate_pesel(pesel)
             except Exception as e:
                 raise forms.ValidationError(str(e))
+            
+            # Sprawdź czy PESEL już istnieje (tylko dla nowych pacjentów lub zmiany PESEL)
+            existing_patient = Patient.objects.search_by_pesel(pesel).first()
+            if existing_patient and existing_patient != self.instance:
+                raise forms.ValidationError('Pacjent z tym numerem PESEL już istnieje w systemie.')
                 
         return pesel
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
-            # Sprawdzenie czy email nie jest już zajęty
+            # Sprawdzenie czy email nie jest już zajęty (z wyłączeniem bieżącego pacjenta)
             existing_patient = Patient.objects.filter(email=email)
             if self.instance.pk:
                 existing_patient = existing_patient.exclude(pk=self.instance.pk)
