@@ -47,7 +47,79 @@
   
   {# Podstawowe informacje #}
   <div class="lg:col-span-2 space-y-6">
+      {% if can_start_40plus or current_visit_40plus %}
+<div class="card bg-base-100 shadow-sm">
+  <div class="card-body">
+    <h3 class="card-title text-lg mb-4">Wizyta 40+</h3>
     
+{% if can_start_40plus and not current_visit_40plus %}
+  <div class="alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>Pacjent może przystąpić do wizyty 40+</span>
+  </div>
+  
+  <form method="post" action="{% url 'patients:start_40plus' patient.pk %}" 
+        onsubmit="return confirm('Czy na pewno chcesz rozpocząć wizytę 40+ dla tego pacjenta?')">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success btn-block mt-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      Rozpocznij wizytę 40+
+    </button>
+  </form>
+
+    {% elif current_visit_40plus %}
+      <div class="alert alert-warning">
+        <span>Trwa wizyta 40+ ({{ current_visit_40plus.status }})</span>
+      </div>
+      
+      <div class="space-y-3 mt-4">
+        <div class="flex items-center justify-between">
+          <span>Ankieta:</span>
+          {% if visit_40plus_status.has_questionnaire %}
+            <span class="badge badge-success">✓ Wypełniona</span>
+          {% else %}
+            <span class="badge badge-error">✗ Brak</span>
+          {% endif %}
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <span>Badania:</span>
+          {% if visit_40plus_status.has_examinations %}
+            <span class="badge badge-success">✓ Wykonane</span>
+          {% else %}
+            <span class="badge badge-error">✗ Brak</span>
+          {% endif %}
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <span>Pomiary:</span>
+          {% if visit_40plus_status.has_measurements %}
+            <span class="badge badge-success">✓ Wykonane</span>
+          {% else %}
+            <span class="badge badge-error">✗ Brak</span>
+          {% endif %}
+        </div>
+        
+        {% if visit_40plus_status.can_refer_to_ipz %}
+          <div class="alert alert-success mt-4">
+            <span>Można skierować na wizytę IPZ</span>
+          </div>
+          <button class="btn btn-primary btn-block">Skieruj na wizytę IPZ</button>
+        {% endif %}
+      </div>
+    
+    {% else %}
+      <div class="alert alert-warning">
+        <span>Pacjent miał wizytę 40+ w ostatnim roku</span>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
     {# Dane osobowe #}
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body">
@@ -139,6 +211,7 @@
         </div>
       </div>
     </div>
+  
 
     {# Historia wizyt (jeśli istnieje) #}
     {% if patient.visit_cards.exists %}
@@ -190,35 +263,7 @@
   {# Sidebar z szybkimi akcjami i statystykami #}
   <div class="space-y-6">
     
-    {# Szybkie akcje #}
-    <div class="card bg-base-100 shadow-sm">
-      <div class="card-body">
-        <h3 class="card-title text-lg mb-4">Szybkie akcje</h3>
-        
-        <div class="space-y-3">
-          <button class="btn btn-success btn-block">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Nowa wizyta
-          </button>
-          
-          <button class="btn btn-info btn-block">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Nowe badanie
-          </button>
-          
-          <button class="btn btn-warning btn-block">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Nowy pomiar
-          </button>
-        </div>
-      </div>
-    </div>
+  
 
     {# Statystyki #}
     <div class="card bg-base-100 shadow-sm">
@@ -255,10 +300,6 @@
         <h3 class="card-title text-lg mb-4">Informacje systemowe</h3>
         
         <div class="text-sm space-y-2">
-          <div class="flex justify-between">
-            <span class="text-base-content/70">ID pacjenta:</span>
-            <span class="font-mono">{{ patient.id }}</span>
-          </div>
           <div class="flex justify-between">
             <span class="text-base-content/70">Utworzono:</span>
             <span>{{ patient.created_at|date:"d.m.Y H:i" }}</span>

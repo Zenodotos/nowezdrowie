@@ -88,12 +88,12 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     "django_browser_reload.middleware.BrowserReloadMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
-    'users.middleware.Require2FAMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',  
+    'users.middleware.Require2FAMiddleware',  
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 ROOT_URLCONF = 'zrowie.urls'
 
 TEMPLATES = [
@@ -105,6 +105,7 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'tenants.context_processors.tenant_features',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
@@ -201,3 +202,8 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
+
+
+OTP_LOGIN_URL = '/verify-2fa/'
+
+DJANGO_OTP_ADMIN = True

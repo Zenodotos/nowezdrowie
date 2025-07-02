@@ -1,4 +1,3 @@
-# visits/models.py
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -53,21 +52,13 @@ class StatusType(models.Model):
         unique=True,
         verbose_name='Nazwa statusu'
     )
-    order_sequence = models.PositiveIntegerField(
-        verbose_name='Kolejność',
-        help_text='Kolejność wyświetlania statusów'
-    )
-    allows_transition_to = models.JSONField(
-        default=list,
-        verbose_name='Dozwolone przejścia statusów',
-        help_text='Lista statusów na które można przejść z tego statusu'
-    )
+
     
     class Meta:
         db_table = 'tenant_schema_statustypes'
         verbose_name = 'Typ statusu'
         verbose_name_plural = 'Typy statusów'
-        ordering = ['order_sequence']
+
     
     def __str__(self):
         return self.get_name_display()

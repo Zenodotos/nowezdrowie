@@ -18,9 +18,8 @@ class VisitTypeAdmin(admin.ModelAdmin):
 
 @admin.register(StatusType)
 class StatusTypeAdmin(admin.ModelAdmin):
-    list_display = ['get_name_display', 'order_sequence', 'transition_count']
-    list_editable = ['order_sequence']
-    ordering = ['order_sequence']
+    list_display = ['get_name_display']
+
     
     def transition_count(self, obj):
         return len(obj.allows_transition_to)

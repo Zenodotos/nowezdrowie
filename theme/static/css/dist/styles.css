@@ -1788,6 +1788,11 @@
     color: var(--color-info-content);
     --alert-color: var(--color-info);
   }
+  .alert-success {
+    border-color: var(--color-success);
+    color: var(--color-success-content);
+    --alert-color: var(--color-success);
+  }
   .alert-warning {
     border-color: var(--color-warning);
     color: var(--color-warning-content);
@@ -2097,6 +2102,10 @@
   }
   .card-xl .card-title {
     --cardtitle-fs: 1.375rem;
+  }
+  .badge-error {
+    --badge-color: var(--color-error);
+    --badge-fg: var(--color-error-content);
   }
   .badge-info {
     --badge-color: var(--color-info);

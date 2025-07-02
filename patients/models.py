@@ -1,4 +1,3 @@
-# patients/models.py
 from django.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
@@ -188,6 +187,41 @@ class Patient(models.Model):
         return today.year - self.date_of_birth.year - (
             (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
         )
+
+
+    @property
+    def can_start_40plus_visit(self):
+        """Sprawdza czy pacjent może przystąpić do wizyty 40+ (raz na rok)"""
+        from datetime import datetime, timedelta
+        from visits.models import VisitCard
+        
+
+        has_open_40plus = self.visit_cards.filter(
+            visit_type__name='40+',
+            is_cancelled=False,
+            status__name__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
+        ).exists()
+        
+        if has_open_40plus:
+            return False
+        
+        one_year_ago = datetime.now().date() - timedelta(days=365)
+        recent_40plus = self.visit_cards.filter(
+            visit_type__name='40+',
+            status__name='zakończone',
+            visit_completed_date__gte=one_year_ago
+        ).exists()
+        
+        return not recent_40plus
+
+    @property
+    def current_40plus_visit(self):
+        """Zwraca aktualną otwartą kartę wizyty 40+"""
+        return self.visit_cards.filter(
+            visit_type__name='40+',
+            is_cancelled=False,
+            status__name__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
+        ).first()
     
     def get_decrypted_pesel(self):
         """Zwraca odszyfrowany PESEL"""
