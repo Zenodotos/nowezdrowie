@@ -1,0 +1,309 @@
+<div id="patient-table-container">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>
+          {% with field="name" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="pesel" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                PESEL ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                PESEL ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                PESEL
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="dob" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data ur. ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data ur. ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data ur.
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="age" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Wiek ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Wiek ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Wiek
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="gender" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Płeć ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Płeć ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Płeć
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="email" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Email ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Email ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Email
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="phone" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Telefon ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Telefon ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#patient-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Telefon
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+        <tr class="hover">
+          <td>{{ p.get_decrypted_full_name }}</td>
+          <td><span class="badge badge-secondary">{{ p.get_masked_pesel }}</span></td>
+          <td>{{ p.date_of_birth }}</td>
+          <td><span class="badge badge-primary">{{ p.age }} lat</span></td>
+          <td>
+            {% if p.gender == 'M' or p.gender == 'Mężczyzna' %}
+              <span class="badge badge-info">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20,4V10H18V7.5L15.5,10L14.08,8.58L16.5,6.08H14V4H20M12.5,11C14,11 15.25,12.25 15.25,13.75C15.25,15.25 14,16.5 12.5,16.5C11,16.5 9.75,15.25 9.75,13.75C9.75,12.25 11,11 12.5,11M12.5,8.5A5.25,5.25 0 0,1 17.75,13.75A5.25,5.25 0 0,1 12.5,19A5.25,5.25 0 0,1 7.25,13.75A5.25,5.25 0 0,1 12.5,8.5Z"/>
+                </svg>
+                M
+              </span>
+            {% elif p.gender == 'F' or p.gender == 'Kobieta' %}
+              <span class="badge badge-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12,4A6,6 0 0,1 18,10A6,6 0 0,1 12,16A6,6 0 0,1 6,10A6,6 0 0,1 12,4M12,6A4,4 0 0,0 8,10A4,4 0 0,0 12,14A4,4 0 0,0 16,10A4,4 0 0,0 12,6M13,15V18H16V20H13V23H11V20H8V18H11V15H13Z"/>
+                </svg>
+                K
+              </span>
+            {% else %}
+              <span class="badge badge-ghost">{{ p.gender|default:"-" }}</span>
+            {% endif %}
+          </td>
+          <td>{{ p.email|default:"-" }}</td>
+          <td>{{ p.phone|default:"-" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-base-content/50 py-8">
+            {% if q %}
+              Nie znaleziono pacjentów dla zapytania "{{ q }}"
+            {% else %}
+              Brak pacjentów w systemie
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+  <div class="mt-6 flex justify-center">
+    <div class="btn-group">
+      {% if page_obj.has_previous %}
+        <a href="#" 
+           hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" 
+           hx-target="#patient-table-container"
+           hx-push-url="true"
+           class="btn">
+          ←
+        </a>
+      {% else %}
+        <button class="btn btn-disabled">←</button>
+      {% endif %}
+      
+      {% for num in paginator.page_range %}
+        {% if forloop.counter0 < 10 %}  {# Limitujemy liczbę wyświetlanych stron #}
+          {% if num == page_obj.number %}
+            <button class="btn btn-active">{{ num }}</button>
+          {% else %}
+            <a href="#" 
+               hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ num }}" 
+               hx-target="#patient-table-container"
+               hx-push-url="true"
+               class="btn">
+              {{ num }}
+            </a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+        <a href="#" 
+           hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" 
+           hx-target="#patient-table-container"
+           hx-push-url="true"
+           class="btn">
+          →
+        </a>
+      {% else %}
+        <button class="btn btn-disabled">→</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Informacje o liczbie wyników #}
+  <div class="text-center text-sm text-base-content/50 mt-4">
+    {% if is_paginated %}
+      Wyświetlanie {{ page_obj.start_index }}-{{ page_obj.end_index }} z {{ paginator.count }} pacjentów
+    {% else %}
+      {% if patients %}
+        Znaleziono {{ patients|length }} pacjent{{ patients|length|pluralize:"ów,a,ów" }}
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

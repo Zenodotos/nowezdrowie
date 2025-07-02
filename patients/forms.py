@@ -1,54 +1,73 @@
 from django import forms
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 from .models import Patient
 
-class PatientForm(forms.ModelForm):
-   
 
+class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = [
-            'pesel_encrypted',
-            'first_name_encrypted',
-            'last_name_encrypted',
+            'first_name',
+            'last_name', 
+            'pesel',
             'email',
             'phone',
-            'date_of_birth',
         ]
+        
         widgets = {
-            'pesel_encrypted': forms.TextInput(attrs={
+            'first_name': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'PESEL (11 cyfr)',
-                'autocomplete': 'off',
+                'placeholder': 'Wprowadź imię pacjenta',
+                'required': True
             }),
-            'first_name_encrypted': forms.TextInput(attrs={
+            'last_name': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'Imię',
-                'autocomplete': 'off',
+                'placeholder': 'Wprowadź nazwisko pacjenta',
+                'required': True
             }),
-            'last_name_encrypted': forms.TextInput(attrs={
+            'pesel': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'Nazwisko',
-                'autocomplete': 'off',
+                'placeholder': 'Wprowadź PESEL (11 cyfr)',
+                'maxlength': '11',
+                'pattern': '[0-9]{11}',
+                'required': True
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'Email',
-                'autocomplete': 'off',
+                'placeholder': 'email@example.com'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'input input-bordered w-full',
-                'placeholder': 'Telefon',
-                'autocomplete': 'off',
+                'placeholder': '+48 123 456 789'
             }),
         }
+        
+        labels = {
+            'first_name': 'Imię',
+            'last_name': 'Nazwisko',
+            'pesel': 'PESEL',
+            'email': 'Adres email',
+            'phone': 'Telefon',
+        }
 
-    def clean_pesel_encrypted(self):
-        pesel = self.cleaned_data.get('pesel_encrypted')
-        if pesel in (None, ''):
-            raise ValidationError("Pole PESEL jest wymagane.")
-        if not pesel.isdigit() or len(pesel) != 11:
-            raise ValidationError("PESEL musi składać się z 11 cyfr.")
+    def clean_pesel(self):
+        pesel = self.cleaned_data.get('pesel')
+        if pesel:
+            # Usuwamy spacje i myślniki
+            pesel = pesel.replace(' ', '').replace('-', '')
+            
+            # Sprawdzamy czy to 11 cyfr
+            if not pesel.isdigit() or len(pesel) != 11:
+                raise forms.ValidationError('PESEL musi składać się z 11 cyfr.')
+                
         return pesel
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # Sprawdzenie czy email nie jest już zajęty
+            existing_patient = Patient.objects.filter(email=email)
+            if self.instance.pk:
+                existing_patient = existing_patient.exclude(pk=self.instance.pk)
+            if existing_patient.exists():
+                raise forms.ValidationError('Pacjent z tym adresem email już istnieje.')
+        return email

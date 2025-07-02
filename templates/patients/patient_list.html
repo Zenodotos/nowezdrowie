@@ -1,101 +1,141 @@
 {% extends 'users/staff_base.html' %}
+
 {% block inner_content %}
-<div class="flex justify-between items-center mb-4">
+<div class="flex justify-between items-center mb-6">
   <h1 class="text-2xl font-bold">Pacjenci</h1>
-  <a href="{% url 'patients:create' %}" class="btn btn-primary">Dodaj nowego</a>
+  <a href="{% url 'patients:create' %}" class="btn btn-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+    Dodaj nowego
+  </a>
 </div>
-<form method="get" class="mb-4">
+
+{# Formularz wyszukiwania z HTMX #}
+<div class="mb-6">
   <div class="form-control">
     <div class="input-group">
-      <input type="text" name="q" value="{{ q }}" placeholder="Szukaj…"
-             class="input input-bordered " autocomplete="off" />
-      <button type="submit" class="btn btn-square">🔍</button>
+      <input type="text" 
+             name="q" 
+             value="{{ q }}" 
+             placeholder="Wyszukaj pacjenta po imieniu, nazwisku lub PESEL..."
+             class="input input-bordered flex-1" 
+             autocomplete="off"
+             hx-get="{% url 'patients:list' %}"
+             hx-trigger="input changed delay:500ms, search"
+             hx-target="#patient-table-container"
+             hx-push-url="true"
+             hx-include="[name='sort']"
+             hx-indicator="#search-indicator" />
+      
+      {# Wskaźnik ładowania #}
+      <div id="search-indicator" class="htmx-indicator">
+        <button class="btn btn-square" disabled>
+          <span class="loading loading-spinner loading-sm"></span>
+        </button>
+      </div>
+      
+      <button type="button" 
+              onclick="document.querySelector('[name=q]').value=''; document.querySelector('[name=q]').dispatchEvent(new Event('input'))"
+              class="btn btn-square"
+              title="Wyczyść wyszukiwanie">
+        ✕
+      </button>
     </div>
   </div>
-</form>
-<table class="table w-full">
-  <thead>
-    <tr>
-      <th>{% with field="name" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">Imię i nazwisko ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">Imię i nazwisko ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">Imię i nazwisko</a>
-        {% endif %}
-      {% endwith %}</th>
-      <th>{% with field="pesel" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">PESEL ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">PESEL ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">PESEL</a>
-        {% endif %}
-      {% endwith %}</th>
-      <th>{% with field="dob" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">Data ur. ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">Data ur. ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">Data ur.</a>
-        {% endif %}
-      {% endwith %}</th>
-      <th>{% with field="age" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">Wiek ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">Wiek ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">Wiek</a>
-        {% endif %}
-      {% endwith %}</th>
-      <th>{% with field="email" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">Email ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">Email ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">Email</a>
-        {% endif %}
-      {% endwith %}</th>
-      <th>{% with field="phone" %}
-        {% if sort == field %}
-          <a href="?q={{ q }}&sort=-{{ field }}">Telefon ▲</a>
-        {% elif sort == "-"|add:field %}
-          <a href="?q={{ q }}&sort={{ field }}">Telefon ▼</a>
-        {% else %}
-          <a href="?q={{ q }}&sort={{ field }}">Telefon</a>
-        {% endif %}
-      {% endwith %}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for p in patients %}
-      <tr>
-        <td>{{ p.get_decrypted_full_name }}</td>
-        <td><span class="badge badge-secondary">{{ p.get_masked_pesel }}</span></td>
-        <td>{{ p.date_of_birth }}</td>
-        <td><span class="badge badge-primary">{{ p.age }} lat</span></td>
-        <td>{{ p.email }}</td>
-        <td>{{ p.phone }}</td>
-      </tr>
-    {% empty %}
-      <tr><td colspan="6" class="text-center">Brak pacjentów.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% if is_paginated %}
-<div class="mt-6 flex justify-center">
-  <div class="btn-group">
-    {% if page_obj.has_previous %}<a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" class="btn">←</a>{% else %}<button class="btn btn-disabled">←</button>{% endif %}
-    {% for num in paginator.page_range %}
-      {% if num == page_obj.number %}<button class="btn btn-active">{{ num }}</button>{% else %}<a href="?q={{ q }}&sort={{ sort }}&page={{ num }}" class="btn">{{ num }}</a>{% endif %}
-    {% endfor %}
-    {% if page_obj.has_next %}<a href="?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" class="btn">→</a>{% else %}<button class="btn btn-disabled">→</button>{% endif %}
-  </div>
+  
+  {# Ukryte pole do przechowywania aktualnego sortowania #}
+  <input type="hidden" name="sort" value="{{ sort }}">
+</div>
+
+{# Informacje o aktualnym wyszukiwaniu #}
+{% if q %}
+<div class="alert alert-info mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+  </svg>
+  <span>Wyniki wyszukiwania dla: <strong>"{{ q }}"</strong></span>
 </div>
 {% endif %}
+
+{# Tabela pacjentów - includujemy partial template #}
+{% include 'patients/patient_table.html' %}
+
+{# Style dla wskaźnika ładowania HTMX #}
+<style>
+.htmx-indicator {
+  display: none;
+}
+.htmx-request .htmx-indicator {
+  display: block;
+}
+.htmx-request.htmx-indicator {
+  display: block;
+}
+
+/* Animacja ładowania dla tabeli */
+#patient-table-container.htmx-swapping {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+/* Hover efekt dla wierszy tabeli */
+.table tbody tr.hover:hover {
+  background-color: var(--color-base-200);
+}
+
+/* Responsywność tabeli */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+  
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+</style>
+
+{# JavaScript dla dodatkowych funkcji #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Obsługa klawisza Escape do czyszczenia wyszukiwania
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const searchInput = document.querySelector('[name="q"]');
+      if (searchInput && searchInput.value) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    }
+  });
+  
+  // Ustawienie fokusa na polu wyszukiwania po załadowaniu
+  const searchInput = document.querySelector('[name="q"]');
+  if (searchInput && !searchInput.value) {
+    searchInput.focus();
+  }
+});
+
+// Obsługa błędów HTMX
+document.addEventListener('htmx:responseError', function(e) {
+  console.error('HTMX Error:', e.detail);
+  // Możesz tutaj dodać toast/notification o błędzie
+});
+
+// Wskaźnik ładowania dla requestów HTMX
+document.addEventListener('htmx:beforeSwap', function(e) {
+  if (e.target.id === 'patient-table-container') {
+    e.target.classList.add('htmx-swapping');
+  }
+});
+
+document.addEventListener('htmx:afterSwap', function(e) {
+  if (e.target.id === 'patient-table-container') {
+    e.target.classList.remove('htmx-swapping');
+  }
+});
+</script>
+
 {% endblock %}
