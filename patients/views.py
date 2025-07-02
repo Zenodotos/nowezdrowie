@@ -1,12 +1,8 @@
 from django.views.generic import ListView, CreateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import HttpResponse
-from django.template.loader import render_to_string
 from .models import Patient
 from .forms import PatientForm
-
-
 class PatientListView(ListView):
     model = Patient
     template_name = 'patients/patient_list.html'
@@ -19,7 +15,6 @@ class PatientListView(ListView):
         'pesel': ['pesel_encrypted'],
         'dob': ['date_of_birth'],
         'age': ['date_of_birth'],  # starsze daty -> większy wiek
-        'gender': ['gender'],
         'email': ['email'],
         'phone': ['phone'],
     }
@@ -28,20 +23,9 @@ class PatientListView(ListView):
         qs = super().get_queryset()
         q = self.request.GET.get('q', '').strip()
         if q:
-            # To może być powolne dla dużych baz danych, ale zachowujemy obecną logikę
-            ids = []
-            for p in qs:
-                try:
-                    pesel = p.get_decrypted_pesel()
-                    name = p.get_decrypted_full_name().lower()
-                    if q in pesel or q.lower() in name:
-                        ids.append(p.id)
-                except:
-                    # W przypadku błędów odszyfrowania, pomijamy ten rekord
-                    continue
+            ids = [p.id for p in qs if q in p.get_decrypted_pesel() or q.lower() in p.get_decrypted_full_name().lower()]
             qs = qs.filter(id__in=ids)
-        
-        # sortowanie
+        # sortowanie domyślne
         sort = self.request.GET.get('sort', '')
         direction = ''
         if sort.startswith('-'):
@@ -58,18 +42,13 @@ class PatientListView(ListView):
         ctx['sort'] = self.request.GET.get('sort', '')
         return ctx
 
-    def get(self, request, *args, **kwargs):
-        self.object_list = self.get_queryset()
-        context = self.get_context_data()
-        
-        # Jeśli to HTMX request, zwracamy tylko tabelę
-        if request.headers.get('HX-Request'):
-            html = render_to_string('patients/patient_table.html', context, request=request)
-            return HttpResponse(html)
-        
-        # Inaczej zwracamy pełną stronę
-        return self.render_to_response(context)
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('q', '')
+        ctx['sort'] = self.request.GET.get('sort', '')
+        return ctx
+    
 
 class PatientCreateView(CreateView):
     model = Patient

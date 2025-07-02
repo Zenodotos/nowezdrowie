@@ -35,15 +35,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           {# Imię #}
           <div class="form-control">
-            <label class="label" for="{{ form.first_name_encrypted.id_for_label }}">
-              <span class="label-text font-medium">{{ form.first_name_encrypted.label }}</span>
+            <label class="label" for="{{ form.first_name.id_for_label }}">
+              <span class="label-text font-medium">{{ form.first_name.label }}</span>
               <span class="label-text-alt text-error">*</span>
             </label>
-            {{ form.first_name_encrypted }}
-            {% if form.first_name_encrypted.errors %}
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
               <label class="label">
                 <span class="label-text-alt text-error">
-                  {% for error in form.first_name_encrypted.errors %}{{ error }}{% endfor %}
+                  {% for error in form.first_name.errors %}{{ error }}{% endfor %}
                 </span>
               </label>
             {% endif %}
@@ -51,15 +51,15 @@
 
           {# Nazwisko #}
           <div class="form-control">
-            <label class="label" for="{{ form.last_name_encrypted.id_for_label }}">
-              <span class="label-text font-medium">{{ form.last_name_encrypted.label }}</span>
+            <label class="label" for="{{ form.last_name.id_for_label }}">
+              <span class="label-text font-medium">{{ form.last_name.label }}</span>
               <span class="label-text-alt text-error">*</span>
             </label>
-            {{ form.last_name_encrypted }}
-            {% if form.last_name_encrypted.errors %}
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
               <label class="label">
                 <span class="label-text-alt text-error">
-                  {% for error in form.last_name_encrypted.errors %}{{ error }}{% endfor %}
+                  {% for error in form.last_name.errors %}{{ error }}{% endfor %}
                 </span>
               </label>
             {% endif %}
@@ -68,20 +68,20 @@
 
         {# PESEL #}
         <div class="form-control">
-          <label class="label" for="{{ form.pesel_encrypted.id_for_label }}">
-            <span class="label-text font-medium">{{ form.pesel_encrypted.label }}</span>
+          <label class="label" for="{{ form.pesel.id_for_label }}">
+            <span class="label-text font-medium">{{ form.pesel.label }}</span>
             <span class="label-text-alt text-error">*</span>
           </label>
-          {{ form.pesel_encrypted }}
-          {% if form.pesel_encrypted.errors %}
+          {{ form.pesel }}
+          {% if form.pesel.errors %}
             <label class="label">
               <span class="label-text-alt text-error">
-                {% for error in form.pesel_encrypted.errors %}{{ error }}{% endfor %}
+                {% for error in form.pesel.errors %}{{ error }}{% endfor %}
               </span>
             </label>
           {% endif %}
           <label class="label">
-            <span class="label-text-alt">11 cyfr bez spacji i myślników. Data urodzenia i płeć zostaną automatycznie wypełnione.</span>
+            <span class="label-text-alt">11 cyfr bez spacji i myślników</span>
           </label>
         </div>
 
@@ -138,7 +138,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Automatyczne formatowanie PESEL podczas wpisywania
-  const peselInput = document.querySelector('input[name="pesel_encrypted"]');
+  const peselInput = document.querySelector('input[name="pesel"]');
   if (peselInput) {
     peselInput.addEventListener('input', function(e) {
       // Usuwamy wszystko co nie jest cyfrą
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Focus na pierwszym polu
-  const firstInput = document.querySelector('input[name="first_name_encrypted"]');
+  const firstInput = document.querySelector('input[name="first_name"]');
   if (firstInput) {
     firstInput.focus();
   }
