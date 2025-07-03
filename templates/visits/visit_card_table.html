@@ -1,0 +1,230 @@
+<div class="overflow-x-auto">
+  <table class="table table-zebra">
+    <thead>
+      <tr>
+        <th>
+          {% with field="patient_name" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Imię i nazwisko
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>PESEL</th>
+        <th>
+          {% with field="questionnaire_date" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data wypełnienia ankiety ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data wypełnienia ankiety ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Data wypełnienia ankiety
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>
+          {% with field="visit_status" %}
+            {% if sort == field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort=-{{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Status ▲
+              </a>
+            {% elif sort == "-"|add:field %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Status ▼
+              </a>
+            {% else %}
+              <a href="#" 
+                 hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ field }}" 
+                 hx-target="#visit-card-table-container"
+                 hx-push-url="true"
+                 class="link">
+                Status
+              </a>
+            {% endif %}
+          {% endwith %}
+        </th>
+        <th>Czy jest badanie</th>
+        <th>Czy są pomiary</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for visit_card in visit_cards %}
+      <tr>
+        <td>
+          <a href="{% url 'visits:detail' visit_card.pk %}" class="link link-hover font-medium">
+            {{ visit_card.patient.get_decrypted_full_name }}
+          </a>
+        </td>
+        <td class="font-mono text-sm">{{ visit_card.patient.get_decrypted_pesel }}</td>
+        <td>
+          {% if visit_card.questionnaire_date %}
+            {{ visit_card.questionnaire_date|date:"d.m.Y" }}
+          {% else %}
+            <span class="text-base-content/50 italic">Nie wypełniono</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="badge badge-sm {% if visit_card.visit_status == 'oczekiwanie' %}badge-warning{% elif visit_card.visit_status == 'zakończone' %}badge-success{% elif visit_card.visit_status == 'odwołane' %}badge-error{% else %}badge-info{% endif %}">
+            {{ visit_card.get_visit_status_display }}
+          </span>
+        </td>
+        <td class="text-center">
+          {% if visit_card.examinations.exists %}
+            <span class="text-success text-lg">✓</span>
+          {% else %}
+            <span class="text-base-content/30">—</span>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if visit_card.measurements.exists %}
+            <span class="text-success text-lg">✓</span>
+          {% else %}
+            <span class="text-base-content/30">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center py-12">
+          {% if q %}
+            <div class="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <div>
+                <p class="font-medium">Nie znaleziono kart wizyt</p>
+                <p class="text-sm">dla zapytania "{{ q }}"</p>
+              </div>
+            </div>
+          {% else %}
+            <div class="flex flex-col items-center gap-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <div>
+                <p class="font-medium">Brak kart wizyt w systemie</p>
+                <p class="text-sm">Karty wizyt będą tu wyświetlane</p>
+              </div>
+            </div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+  <div class="mt-6 flex justify-center">
+    <div class="btn-group">
+      {% if page_obj.has_previous %}
+        <a href="#" 
+           hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" 
+           hx-target="#visit-card-table-container"
+           hx-push-url="true"
+           class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+      {% else %}
+        <button class="btn btn-disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+      {% endif %}
+      
+      {% for num in paginator.page_range %}
+        {% if forloop.counter0 < 10 %}
+          {% if num == page_obj.number %}
+            <button class="btn btn-active">{{ num }}</button>
+          {% else %}
+            <a href="#" 
+               hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ sort }}&page={{ num }}" 
+               hx-target="#visit-card-table-container"
+               hx-push-url="true"
+               class="btn">
+              {{ num }}
+            </a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      
+      {% if page_obj.has_next %}
+        <a href="#" 
+           hx-get="{% url 'visits:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" 
+           hx-target="#visit-card-table-container"
+           hx-push-url="true"
+           class="btn">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      {% else %}
+        <button class="btn btn-disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="text-center text-sm text-base-content/50 mt-4">
+    {% if is_paginated %}
+      Wyświetlanie {{ page_obj.start_index }}-{{ page_obj.end_index }} z {{ paginator.count }} kart wizyt
+    {% else %}
+      {% if visit_cards %}
+        Znaleziono {{ visit_cards|length }} kart{{ visit_cards|length|pluralize:"ę,y,t" }} wizyt
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

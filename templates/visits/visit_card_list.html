@@ -1,0 +1,40 @@
+{% extends 'users/staff_base.html' %}
+
+{% block inner_content %}
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold">{{ page_title }}</h1>
+  </div>
+
+  <div class="card bg-base-100 shadow-sm">
+    <div class="card-body">
+      <form method="get" class="flex gap-4">
+        <div class="flex-1">
+          <input 
+            type="text" 
+            name="q" 
+            value="{{ q }}" 
+            placeholder="Szukaj po imieniu, nazwisku lub PESEL..." 
+            class="input input-bordered w-full"
+            hx-get="{% url 'visits:list' %}"
+            hx-target="#visit-card-table-container"
+            hx-trigger="keyup changed delay:300ms"
+            hx-include="[name='sort']"
+            hx-push-url="true">
+        </div>
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <button type="submit" class="btn btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Szukaj
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="visit-card-table-container">
+    {% include 'visits/visit_card_table.html' %}
+  </div>
+</div>
+{% endblock %}

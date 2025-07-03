@@ -25,3 +25,55 @@ class VisitCardDetailView(LoginRequiredMixin, DetailView):
             }.get(visit_card.visit_status, 'badge-neutral')
         })
         return context
+    
+from django.views.generic import ListView
+
+class VisitCardListView(LoginRequiredMixin, ListView):
+    model = VisitCard
+    template_name = 'visits/visit_card_list.html'
+    context_object_name = 'visit_cards'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related('patient', 'visit_type')
+        q = self.request.GET.get('q', '').strip()
+        sort = self.request.GET.get('sort', '-created_at')
+        
+        if q:
+            matching_ids = []
+            for visit_card in qs:
+                try:
+                    full_name = visit_card.patient.get_decrypted_full_name().lower()
+                    pesel = visit_card.patient.get_decrypted_pesel()
+                    
+                    if (q.lower() in full_name or q in pesel):
+                        matching_ids.append(visit_card.id)
+                except:
+                    continue
+            qs = qs.filter(id__in=matching_ids)
+
+        sort_mapping = {
+            'patient_name': 'patient__first_name_encrypted',
+            '-patient_name': '-patient__first_name_encrypted',
+            'questionnaire_date': 'questionnaire_date',
+            '-questionnaire_date': '-questionnaire_date',
+            'visit_status': 'visit_status',
+            '-visit_status': '-visit_status',
+        }
+        
+        if sort in sort_mapping:
+            return qs.order_by(sort_mapping[sort])
+        
+        return qs.order_by(sort)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'q': self.request.GET.get('q', ''),
+            'sort': self.request.GET.get('sort', '-created_at'),
+            'page_title': 'Karty wizyt',
+            'breadcrumbs': [
+                {'name': 'Karty wizyt', 'url': None}
+            ]
+        })
+        return context

@@ -2024,6 +2024,9 @@
   .text-slate-500 {
     color: var(--color-slate-500);
   }
+  .text-success {
+    color: var(--color-success);
+  }
   .text-white {
     color: var(--color-white);
   }
@@ -2047,6 +2050,14 @@
   @media (hover: none) {
     .btn-link:hover:not(.btn-active, :active, :focus-visible, :disabled, [disabled], .btn-disabled) {
       text-decoration-line: none;
+    }
+  }
+  .link-hover {
+    text-decoration-line: none;
+  }
+  @media (hover: hover) {
+    .link-hover:hover {
+      text-decoration-line: underline;
     }
   }
   .shadow {
