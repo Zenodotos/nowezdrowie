@@ -18,7 +18,7 @@ class Require2FAMiddleware:
             '/verify-2fa/',
             '/setup-2fa-required/',
             '/logout/',
-
+            '/',
             '/static/',  
             '/media/',  
         ]

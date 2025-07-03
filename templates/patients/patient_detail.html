@@ -73,7 +73,7 @@
 
     {% elif current_visit_40plus %}
       <div class="alert alert-warning">
-        <span>Trwa wizyta 40+ ({{ current_visit_40plus.status }})</span>
+        <span>Trwa wizyta 40+ ({{ current_visit_40plus.visit_status }})</span>
       </div>
       
       <div class="space-y-3 mt-4">
@@ -239,7 +239,7 @@
                 <td>{{ visit.created_at|date:"d.m.Y" }}</td>
                 <td>{{ visit.visit_type }}</td>
                 <td>
-                  <span class="badge badge-sm">{{ visit.status }}</span>
+                  <span class="badge badge-sm">{{ visit.visit_status }}</span>
                 </td>
               </tr>
               {% endfor %}

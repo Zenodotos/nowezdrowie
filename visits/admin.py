@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.core.exceptions import ValidationError
-from .models import VisitType, StatusType, VisitCard
+from .models import VisitType, VisitCard
 
 
 @admin.register(VisitType)
@@ -15,15 +15,6 @@ class VisitTypeAdmin(admin.ModelAdmin):
         return obj.visit_cards.count()
     visit_count.short_description = 'Liczba wizyt'
 
-
-@admin.register(StatusType)
-class StatusTypeAdmin(admin.ModelAdmin):
-    list_display = ['get_name_display']
-
-    
-    def transition_count(self, obj):
-        return len(obj.allows_transition_to)
-    transition_count.short_description = 'Dozwolone przejścia'
 
 
 @admin.register(VisitCard)
@@ -40,7 +31,7 @@ class VisitCardAdmin(admin.ModelAdmin):
     ]
     
     list_filter = [
-        'status',
+        'visit_status',
         'visit_type',
         'questionnaire_location',
         'is_cancelled',
@@ -67,7 +58,7 @@ class VisitCardAdmin(admin.ModelAdmin):
             'fields': (
                 'patient',
                 'visit_type',
-                'status',
+                'visit_status',
                 'current_responsible_person',
                 'coordinator'
             )

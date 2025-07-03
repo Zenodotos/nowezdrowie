@@ -7,7 +7,7 @@ from .models import Patient
 from .forms import PatientForm
 from django.db import models
 from django.http import JsonResponse
-from visits.models import VisitCard, VisitType, StatusType
+from visits.models import VisitCard, VisitType
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 
@@ -235,13 +235,10 @@ def start_40plus_visit(request, pk):
     try:
         # Pobierz typ wizyty 40+
         visit_type_40plus = VisitType.objects.get(name='40+')
-        initial_status = StatusType.objects.get(name='oczekiwanie')
-        
-        # Utwórz kartę wizyty
         visit_card = VisitCard.objects.create(
             patient=patient,
             visit_type=visit_type_40plus,
-            status=initial_status,
+            visit_status='oczekiwanie',  
             current_responsible_person=request.user
         )
         
@@ -252,8 +249,6 @@ def start_40plus_visit(request, pk):
         
     except VisitType.DoesNotExist:
         messages.error(request, "Nie znaleziono typu wizyty 40+")
-    except StatusType.DoesNotExist:
-        messages.error(request, "Nie znaleziono statusu 'oczekiwanie'")
     except Exception as e:
         messages.error(request, f"Błąd podczas tworzenia wizyty: {str(e)}")
     

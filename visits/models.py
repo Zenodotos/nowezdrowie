@@ -87,7 +87,7 @@ class VisitCard(models.Model):
     )
 
     visit_status = models.CharField(
-        max_length=20,
+        max_length=25,
         choices=STATUS_CHOICES,
         default='oczekiwanie',
         verbose_name='Status karty'
@@ -170,12 +170,11 @@ class VisitCard(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.patient.get_decrypted_full_name()} - {self.visit_type} ({self.status})"
+        return f"{self.patient.get_decrypted_full_name()} - {self.visit_type} ({self.get_visit_status_display()})"
     
     @property
     def is_active(self):
-        """Sprawdza czy wizyta jest aktywna (nie anulowana i nie zakończona)"""
-        return not self.is_cancelled and self.status.name not in ['zakończone', 'odwołane']
+        return not self.is_cancelled and self.visit_status not in ['zakończone', 'odwołane']
     
     @property
     def days_since_created(self):
@@ -189,35 +188,6 @@ class VisitCard(models.Model):
             return False
         return self.referral_expires_date < timezone.now().date()
     
-    def can_change_status_to(self, new_status):
-        """Sprawdza czy można zmienić status na nowy"""
-        if isinstance(new_status, str):
-            return self.status.can_transition_to(new_status)
-        return self.status.can_transition_to(new_status.name)
-    
-    def change_status(self, new_status, user=None):
-        """Zmienia status wizyty z walidacją"""
-        if not self.can_change_status_to(new_status):
-            raise ValidationError(
-                f"Nie można zmienić statusu z '{self.status}' na '{new_status}'"
-            )
-        
-        if isinstance(new_status, str):
-            new_status_obj = StatusType.objects.get(name=new_status)
-        else:
-            new_status_obj = new_status
-        
-        self.status = new_status_obj
-        
-        # Automatyczne wypełnianie dat na podstawie statusu
-        if new_status_obj.name == 'przyjęte_do_realizacji' and not self.accepted_for_realization_date:
-            self.accepted_for_realization_date = timezone.now().date()
-        elif new_status_obj.name == 'wystawiono_skierowanie' and not self.referral_issued_date:
-            self.referral_issued_date = timezone.now().date()
-        elif new_status_obj.name == 'wizyta_odbyta' and not self.visit_completed_date:
-            self.visit_completed_date = timezone.now().date()
-        
-        self.save()
     
     def clean(self):
         """Walidacja modelu"""

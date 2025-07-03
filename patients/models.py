@@ -199,7 +199,7 @@ class Patient(models.Model):
         has_open_40plus = self.visit_cards.filter(
             visit_type__name='40+',
             is_cancelled=False,
-            status__name__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
+            visit_status__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
         ).exists()
         
         if has_open_40plus:
@@ -208,7 +208,7 @@ class Patient(models.Model):
         one_year_ago = datetime.now().date() - timedelta(days=365)
         recent_40plus = self.visit_cards.filter(
             visit_type__name='40+',
-            status__name='zakończone',
+            visit_status='zakończone',
             visit_completed_date__gte=one_year_ago
         ).exists()
         
@@ -216,11 +216,10 @@ class Patient(models.Model):
 
     @property
     def current_40plus_visit(self):
-        """Zwraca aktualną otwartą kartę wizyty 40+"""
         return self.visit_cards.filter(
             visit_type__name='40+',
             is_cancelled=False,
-            status__name__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
+            visit_status__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
         ).first()
     
     def get_decrypted_pesel(self):
