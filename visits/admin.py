@@ -23,7 +23,7 @@ class VisitCardAdmin(admin.ModelAdmin):
         'id',
         'get_patient_name',
         'visit_type',
-        'status_badge',
+        'visit_status',
         'questionnaire_date',
         'visit_completed_date',
         'is_active',
@@ -103,24 +103,7 @@ class VisitCardAdmin(admin.ModelAdmin):
         return obj.patient.get_decrypted_full_name()
     get_patient_name.short_description = 'Pacjent'
     
-    def status_badge(self, obj):
-        colors = {
-            'oczekiwanie': 'warning',
-            'przyjęte_do_realizacji': 'info', 
-            'wystawiono_skierowanie': 'primary',
-            'badania_w_toku': 'secondary',
-            'wizyta_odbyta': 'success',
-            'interwencja': 'dark',
-            'zakończone': 'success',
-            'odwołane': 'danger'
-        }
-        color = colors.get(obj.status.name, 'secondary')
-        return format_html(
-            '<span class="badge bg-{}">{}</span>',
-            color,
-            obj.status
-        )
-    status_badge.short_description = 'Status'
+
     
     actions = ['change_status_action']
     

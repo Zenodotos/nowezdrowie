@@ -227,13 +227,12 @@ def start_40plus_visit(request, pk):
     """Rozpoczyna wizytę 40+ dla pacjenta"""
     patient = get_object_or_404(Patient, pk=pk)
     
-    # Sprawdź czy może rozpocząć wizytę 40+
+
     if not patient.can_start_40plus_visit:
         messages.error(request, "Pacjent nie może obecnie przystąpić do wizyty 40+")
         return redirect('patients:detail', pk=pk)
     
     try:
-        # Pobierz typ wizyty 40+
         visit_type_40plus = VisitType.objects.get(name='40+')
         visit_card = VisitCard.objects.create(
             patient=patient,

@@ -198,11 +198,10 @@ class Patient(models.Model):
 
         has_open_40plus = self.visit_cards.filter(
             visit_type__name='40+',
-            is_cancelled=False,
-            visit_status__in=['oczekiwanie', 'przyjęte_do_realizacji', 'badania_w_toku']
+            is_cancelled=False
         ).exists()
         
-        if has_open_40plus:
+        if has_open_40plus or self.age < 40:
             return False
         
         one_year_ago = datetime.now().date() - timedelta(days=365)

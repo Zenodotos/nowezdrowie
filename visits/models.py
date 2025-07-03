@@ -192,8 +192,10 @@ class VisitCard(models.Model):
     def clean(self):
         """Walidacja modelu"""
         super().clean()
+
+        if (self.visit_type.name == '40+' and self.patient.age < 40):
+            raise ValidationError('Osoba musi mieć więcej niż 40 lat aby przystąpić do 40+')
         
-        # Sprawdź czy data ważności skierowania nie jest wcześniejsza niż data wystawienia
         if (self.referral_issued_date and self.referral_expires_date and 
             self.referral_expires_date < self.referral_issued_date):
             raise ValidationError(
