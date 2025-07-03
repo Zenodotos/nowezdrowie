@@ -5,5 +5,5 @@ app_name = 'visits'
 
 urlpatterns = [
     path('<int:pk>/', views.VisitCardDetailView.as_view(), name='detail'),
-    path('wizyty/', views.VisitCardListView.as_view(), name='list'),
+    path('', views.VisitCardListView.as_view(), name='list'),
 ]

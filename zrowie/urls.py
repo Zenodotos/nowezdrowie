@@ -11,5 +11,5 @@ urlpatterns = [
     path('pacjenci/', include('patients.urls')),
     path('', include('users.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
-    path('', include('visits.urls')),
+    path('wizyty/', include('visits.urls')),
 ]

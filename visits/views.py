@@ -28,6 +28,8 @@ class VisitCardDetailView(LoginRequiredMixin, DetailView):
     
 from django.views.generic import ListView
 
+
+
 class VisitCardListView(LoginRequiredMixin, ListView):
     model = VisitCard
     template_name = 'visits/visit_card_list.html'
@@ -35,7 +37,7 @@ class VisitCardListView(LoginRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('patient', 'visit_type')
+        qs = super().get_queryset().select_related('patient')
         q = self.request.GET.get('q', '').strip()
         sort = self.request.GET.get('sort', '-created_at')
         
@@ -47,33 +49,44 @@ class VisitCardListView(LoginRequiredMixin, ListView):
                     pesel = visit_card.patient.get_decrypted_pesel()
                     
                     if (q.lower() in full_name or q in pesel):
-                        matching_ids.append(visit_card.id)
+                        matching_ids.append(visit_card.pk)
                 except:
                     continue
-            qs = qs.filter(id__in=matching_ids)
-
-        sort_mapping = {
-            'patient_name': 'patient__first_name_encrypted',
-            '-patient_name': '-patient__first_name_encrypted',
-            'questionnaire_date': 'questionnaire_date',
-            '-questionnaire_date': '-questionnaire_date',
-            'visit_status': 'visit_status',
-            '-visit_status': '-visit_status',
-        }
+            
+            qs = qs.filter(pk__in=matching_ids)
         
-        if sort in sort_mapping:
-            return qs.order_by(sort_mapping[sort])
-        
-        return qs.order_by(sort)
+        # Sortowanie
+        if sort:
+            direction = '' if sort.startswith('-') else ''
+            sort_field = sort.lstrip('-')
+            
+            sort_mapping = {
+                'patient_name': 'patient__last_name_encrypted',
+                'questionnaire_date': 'questionnaire_date',
+                'visit_status': 'visit_status',
+                'visit_type': 'visit_type',
+                'created_at': 'created_at',
+            }
+            
+            if sort_field in sort_mapping:
+                db_field = sort_mapping[sort_field]
+                qs = qs.order_by(f"{direction}{db_field}")
+            else:
+                qs = qs.order_by('-created_at')
+        else:
+            qs = qs.order_by('-created_at')
+            
+        return qs
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'q': self.request.GET.get('q', ''),
-            'sort': self.request.GET.get('sort', '-created_at'),
-            'page_title': 'Karty wizyt',
-            'breadcrumbs': [
-                {'name': 'Karty wizyt', 'url': None}
-            ]
-        })
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('q', '')
+        ctx['sort'] = self.request.GET.get('sort', '')
+        ctx['page_title'] = 'Karty wizyt'
+        return ctx
+
+    def get_template_names(self):
+        # Jeśli to request HTMX, zwróć tylko fragment tabeli
+        if self.request.htmx:
+            return ['visits/visit_card_table.html']
+        return ['visits/visit_card_list.html']
