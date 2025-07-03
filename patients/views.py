@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 
 
-class PatientListView(ListView):
+class PatientListView(LoginRequiredMixin, ListView):
     model = Patient
     template_name = 'patients/patient_list.html'
     context_object_name = 'patients'
@@ -168,12 +168,7 @@ class PatientCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(
-            self.request, 
-            f'Pacjent {self.object.get_decrypted_full_name()} został dodany pomyślnie.'
-        )
-        return response
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.error(

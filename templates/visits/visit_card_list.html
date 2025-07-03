@@ -8,218 +8,207 @@
 {# Filtry i wyszukiwanie #}
 <div class="card bg-base-100 shadow-sm mb-6">
   <div class="card-body">
-    <div class="flex flex-col lg:flex-row gap-4">
-      
-      {# Wyszukiwanie #}
-      <div class="flex-1">
-        <div class="form-control">
-          <div class="input-group">
-            <input type="text" 
-                   name="q" 
-                   value="{{ q }}" 
-                   placeholder="Szukaj po imieniu, nazwisku lub PESEL..."
-                   class="input input-bordered flex-1" 
-                   autocomplete="off"
-                   hx-get="{% url 'visits:list' %}"
-                   hx-trigger="input changed delay:500ms, search"
-                   hx-target="#visit-card-table-container"
-                   hx-push-url="true"
-                   hx-include="[name='sort'], .filter-checkbox:checked"
-                   hx-indicator="#search-indicator" />
-            
-            {# Wskaźnik ładowania #}
-            <div id="search-indicator" class="htmx-indicator">
-              <button class="btn btn-square" disabled>
-                <span class="loading loading-spinner loading-sm"></span>
+    <form id="filter-form">
+      <div class="flex flex-col lg:flex-row gap-4">
+        
+        {# Wyszukiwanie #}
+        <div class="flex-1">
+          <div class="form-control">
+            <div class="input-group">
+              <input type="text" 
+                     name="q" 
+                     value="{{ q }}" 
+                     placeholder="Szukaj po imieniu, nazwisku lub PESEL..."
+                     class="input input-bordered flex-1" 
+                     autocomplete="off"
+                     hx-get="{% url 'visits:list' %}"
+                     hx-trigger="input changed delay:500ms, search"
+                     hx-target="#visit-card-table-container"
+                     hx-push-url="true"
+                     hx-include="#filter-form"
+                     hx-indicator="#search-indicator" />
+              
+              {# Wskaźnik ładowania #}
+              <div id="search-indicator" class="htmx-indicator">
+                <button class="btn btn-square" disabled>
+                  <span class="loading loading-spinner loading-sm"></span>
+                </button>
+              </div>
+              
+              <button type="button" 
+                      onclick="clearSearch()"
+                      class="btn btn-square"
+                      title="Wyczyść wyszukiwanie">
+                ✕
               </button>
             </div>
-            
-            <button type="button" 
-                    onclick="document.querySelector('[name=q]').value=''; document.querySelector('[name=q]').dispatchEvent(new Event('input'))"
-                    class="btn btn-square"
-                    title="Wyczyść wyszukiwanie">
-              ✕
-            </button>
           </div>
         </div>
-      </div>
 
-      {# Filtr statusów #}
-      <div class="form-control">
-        <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-outline gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filtruj statusy
-            <div class="badge badge-sm badge-primary" id="filter-count" style="display: none;">0</div>
-          </div>
-          
-          <div tabindex="0" class="dropdown-content card card-compact w-80 p-2 shadow bg-base-100 z-50">
-            <div class="card-body">
-              <h3 class="font-bold text-lg">Filtruj po statusach</h3>
-              
-              <div class="form-control">
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input type="checkbox" 
-                         class="checkbox checkbox-primary filter-checkbox" 
-                         id="select-all-status"
-                         onchange="toggleAllStatus(this)">
-                  <span class="label-text font-medium">Zaznacz wszystkie</span>
-                </label>
-              </div>
-              
-              <div class="divider my-2"></div>
-              
-              <div class="space-y-2 max-h-64 overflow-y-auto">
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="oczekiwanie"
-                           class="checkbox checkbox-warning filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'oczekiwanie' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-warning badge-sm mr-2">Oczekiwanie</span>
-                    </span>
-                  </label>
-                </div>
+        {# Filtr statusów #}
+        <div class="form-control">
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-outline gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filtruj statusy
+              <div class="badge badge-sm badge-primary" id="filter-count" style="display: none;">0</div>
+            </div>
+            
+            <div tabindex="0" class="dropdown-content card card-compact w-80 p-2 shadow bg-base-100 z-50">
+              <div class="card-body">
+                <h3 class="font-bold text-lg">Filtruj po statusach</h3>
                 
                 <div class="form-control">
                   <label class="label cursor-pointer justify-start gap-3">
                     <input type="checkbox" 
-                           name="status" 
-                           value="przyjęte_do_realizacji"
-                           class="checkbox checkbox-info filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'przyjęte_do_realizacji' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-info badge-sm mr-2">Przyjęte do realizacji</span>
-                    </span>
+                           class="checkbox checkbox-primary" 
+                           id="select-all-status"
+                           onchange="toggleAllStatus(this)">
+                    <span class="label-text font-medium">Zaznacz wszystkie</span>
                   </label>
                 </div>
                 
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="wystawiono_skierowanie"
-                           class="checkbox checkbox-secondary filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'wystawiono_skierowanie' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-secondary badge-sm mr-2">Wystawiono skierowanie</span>
-                    </span>
-                  </label>
+                <div class="divider my-2"></div>
+                
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="oczekiwanie"
+                             class="checkbox checkbox-warning status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'oczekiwanie' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-warning badge-sm mr-2">Oczekiwanie</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="przyjęte_do_realizacji"
+                             class="checkbox checkbox-info status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'przyjęte_do_realizacji' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-info badge-sm mr-2">Przyjęte do realizacji</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="wystawiono_skierowanie"
+                             class="checkbox checkbox-secondary status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'wystawiono_skierowanie' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-secondary badge-sm mr-2">Wystawiono skierowanie</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="badania_w_toku"
+                             class="checkbox checkbox-primary status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'badania_w_toku' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-primary badge-sm mr-2">Badania w toku</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="wizyta_odbyta"
+                             class="checkbox checkbox-success status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'wizyta_odbyta' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-success badge-sm mr-2">Wizyta odbyta</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="interwencja"
+                             class="checkbox checkbox-accent status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'interwencja' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-accent badge-sm mr-2">Interwencja</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="zakończone"
+                             class="checkbox checkbox-success status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'zakończone' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-success badge-sm mr-2">Zakończone</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="status" 
+                             value="odwołane"
+                             class="checkbox checkbox-error status-checkbox"
+                             onchange="updateFilters()"
+                             {% if 'odwołane' in status_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-error badge-sm mr-2">Odwołane</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
                 
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="badania_w_toku"
-                           class="checkbox checkbox-primary filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'badania_w_toku' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-primary badge-sm mr-2">Badania w toku</span>
-                    </span>
-                  </label>
-                </div>
+                <div class="divider my-2"></div>
                 
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="wizyta_odbyta"
-                           class="checkbox checkbox-success filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'wizyta_odbyta' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-success badge-sm mr-2">Wizyta odbyta</span>
-                    </span>
-                  </label>
+                <div class="flex gap-2">
+                  <button type="button" class="btn btn-sm btn-ghost flex-1" onclick="clearAllFilters()">
+                    Wyczyść filtry
+                  </button>
+                  <button type="button" class="btn btn-sm btn-primary flex-1" onclick="document.activeElement.blur()">
+                    Zamknij
+                  </button>
                 </div>
-                
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="interwencja"
-                           class="checkbox checkbox-accent filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'interwencja' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-accent badge-sm mr-2">Interwencja</span>
-                    </span>
-                  </label>
-                </div>
-                
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="zakończone"
-                           class="checkbox checkbox-success filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'zakończone' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-success badge-sm mr-2">Zakończone</span>
-                    </span>
-                  </label>
-                </div>
-                
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input type="checkbox" 
-                           name="status" 
-                           value="odwołane"
-                           class="checkbox checkbox-error filter-checkbox status-checkbox"
-                           onchange="updateFilters()"
-                           {% if 'odwołane' in status_filters %}checked{% endif %}>
-                    <span class="label-text">
-                      <span class="badge badge-error badge-sm mr-2">Odwołane</span>
-                    </span>
-                  </label>
-                </div>
-              </div>
-              
-              <div class="divider my-2"></div>
-              
-              <div class="flex gap-2">
-                <button class="btn btn-sm btn-ghost flex-1" onclick="clearAllFilters()">
-                  Wyczyść filtry
-                </button>
-                <button class="btn btn-sm btn-primary flex-1" onclick="closeDropdown()">
-                  Zamknij
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    
-    {# Ukryte pola #}
-    <input type="hidden" name="sort" value="{{ sort }}">
-    <input type="hidden" name="status_filter_open" value="0">
+      
+      {# Ukryte pola #}
+      <input type="hidden" name="sort" value="{{ sort }}">
+    </form>
   </div>
 </div>
 
-{# Aktywne filtry #}
-{% if status_filters %}
-<div class="flex flex-wrap gap-2 mb-4">
-  <span class="text-sm font-medium">Aktywne filtry:</span>
-  {% for status in status_filters %}
-    <div class="badge badge-outline gap-2">
-      {{ status|title }}
-      <button class="btn btn-ghost btn-xs p-0" onclick="removeStatusFilter('{{ status }}')">✕</button>
-    </div>
-  {% endfor %}
-  <button class="btn btn-ghost btn-xs" onclick="clearAllFilters()">Wyczyść wszystkie</button>
-</div>
-{% endif %}
+
 
 {# Informacje o wyszukiwaniu #}
 {% if q %}
@@ -232,7 +221,7 @@
 {% endif %}
 
 {# Tabela kart wizyt #}
-<div id="visit-card-table-container">
+<div id="visit-card-table-container" class="min-h-screen">
   {% include 'visits/visit_card_table.html' %}
 </div>
 
@@ -282,30 +271,43 @@ function removeStatusFilter(status) {
   }
 }
 
+// Wyczyść wyszukiwanie
+function clearSearch() {
+  const searchInput = document.querySelector('[name="q"]');
+  searchInput.value = '';
+  searchInput.dispatchEvent(new Event('input'));
+}
+
 // Zamknij dropdown
 function closeDropdown() {
-  const dropdown = document.querySelector('.dropdown');
+  const dropdown = document.querySelector('.dropdown-content');
   if (dropdown) dropdown.blur();
 }
 
-// Trigger HTMX update
+// Trigger HTMX update z prawidłowymi parametrami
 function triggerUpdate() {
-  const searchInput = document.querySelector('[name="q"]');
-  if (searchInput) {
-    htmx.trigger(searchInput, 'input');
-  }
+  const form = document.getElementById('filter-form');
+  const formData = new FormData(form);
+  const params = new URLSearchParams();
+  
+  // Dodaj query
+  const q = formData.get('q') || '';
+  if (q) params.append('q', q);
+  
+  // Dodaj sort
+  const sort = formData.get('sort') || '';
+  if (sort) params.append('sort', sort);
+  
+  // Dodaj zaznaczone statusy
+  const checkedStatuses = document.querySelectorAll('.status-checkbox:checked');
+  checkedStatuses.forEach(cb => params.append('status', cb.value));
+  
+  // Wykonaj request HTMX
+  htmx.ajax('GET', `{% url 'visits:list' %}?${params.toString()}`, {
+    target: '#visit-card-table-container',
+    pushUrl: true
+  });
 }
-
-// Obsługa klawisza Escape
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    const searchInput = document.querySelector('[name="q"]');
-    if (searchInput && searchInput.value) {
-      searchInput.value = '';
-      searchInput.dispatchEvent(new Event('input'));
-    }
-  }
-});
 
 // Inicjalizacja po załadowaniu
 document.addEventListener('DOMContentLoaded', function() {

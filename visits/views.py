@@ -1,6 +1,9 @@
-from django.views.generic import DetailView
+from django.views.generic import DetailView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import VisitCard
+from django.urls import reverse
+
+
 
 class VisitCardDetailView(LoginRequiredMixin, DetailView):
     model = VisitCard
@@ -11,10 +14,22 @@ class VisitCardDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         visit_card = self.get_object()
         
+        # Ustal URL powrotu na podstawie parametru 'from'
+        from_page = self.request.GET.get('from', 'patient_detail')
+        
+        if from_page == 'visits_list':
+            back_url = reverse('visits:list')
+            back_text = 'Powrót do listy wizyt'
+        else:
+            back_url = reverse('patients:detail', kwargs={'pk': visit_card.patient.pk})
+            back_text = 'Powrót do pacjenta'
+        
         context.update({
             'page_title': f'Wizyta {visit_card.visit_type} - {visit_card.patient.get_decrypted_full_name()}',
             'examinations': visit_card.examinations.all().order_by('-created_at'),
             'measurements': visit_card.measurements.all().order_by('-measurement_date'),
+            'back_url': back_url,
+            'back_text': back_text,
             'status_badge_class': {
                 'oczekiwanie': 'badge-warning',
                 'przyjęte_do_realizacji': 'badge-info', 
@@ -26,7 +41,6 @@ class VisitCardDetailView(LoginRequiredMixin, DetailView):
         })
         return context
     
-from django.views.generic import ListView
 
 
 
@@ -40,6 +54,11 @@ class VisitCardListView(LoginRequiredMixin, ListView):
         qs = super().get_queryset().select_related('patient')
         q = self.request.GET.get('q', '').strip()
         sort = self.request.GET.get('sort', '-created_at')
+        status_filters = self.request.GET.getlist('status')
+        
+        # Filtrowanie po statusach
+        if status_filters:
+            qs = qs.filter(visit_status__in=status_filters)
         
         if q:
             matching_ids = []
@@ -82,11 +101,11 @@ class VisitCardListView(LoginRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('q', '')
         ctx['sort'] = self.request.GET.get('sort', '')
+        ctx['status_filters'] = self.request.GET.getlist('status')
         ctx['page_title'] = 'Karty wizyt'
         return ctx
 
     def get_template_names(self):
-        # Jeśli to request HTMX, zwróć tylko fragment tabeli
         if self.request.htmx:
             return ['visits/visit_card_table.html']
         return ['visits/visit_card_list.html']

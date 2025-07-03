@@ -26,13 +26,13 @@
   </div>
   
   <div class="flex gap-2">
-    <a href="{% url 'patients:detail' visit_card.patient.pk %}" class="btn btn-ghost">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      Powrót do pacjenta
-    </a>
-  </div>
+  <a href="{{ back_url }}" class="btn btn-ghost">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    {{ back_text }}
+  </a>
+</div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
