@@ -32,40 +32,7 @@ class VisitType(models.Model):
         return self.name
 
 
-class StatusType(models.Model):
-    """Statusy kart wizyt i dozwolone przejścia"""
-    
-    STATUS_CHOICES = [
-        ('oczekiwanie', 'Oczekiwanie'),
-        ('przyjęte_do_realizacji', 'Przyjęte do realizacji'),
-        ('wystawiono_skierowanie', 'Wystawiono skierowanie'),
-        ('badania_w_toku', 'Badania w toku'),
-        ('wizyta_odbyta', 'Wizyta odbyta'),
-        ('interwencja', 'Interwencja'),
-        ('zakończone', 'Zakończone'),
-        ('odwołane', 'Odwołane'),
-    ]
-    
-    name = models.CharField(
-        max_length=50,
-        choices=STATUS_CHOICES,
-        unique=True,
-        verbose_name='Nazwa statusu'
-    )
 
-    
-    class Meta:
-        db_table = 'tenant_schema_statustypes'
-        verbose_name = 'Typ statusu'
-        verbose_name_plural = 'Typy statusów'
-
-    
-    def __str__(self):
-        return self.get_name_display()
-    
-    def can_transition_to(self, target_status):
-        """Sprawdza czy można przejść do docelowego statusu"""
-        return target_status in self.allows_transition_to
 
 
 class VisitCard(models.Model):
@@ -74,6 +41,17 @@ class VisitCard(models.Model):
     QUESTIONNAIRE_LOCATION_CHOICES = [
         ('ikp', 'IKP'),
         ('poz', 'POZ'),
+    ]
+
+    STATUS_CHOICES = [
+    ('oczekiwanie', 'Oczekiwanie'),
+    ('przyjęte_do_realizacji', 'Przyjęte do realizacji'),
+    ('wystawiono_skierowanie', 'Wystawiono skierowanie'),
+    ('badania_w_toku', 'Badania w toku'),
+    ('wizyta_odbyta', 'Wizyta odbyta'),
+    ('interwencja', 'Interwencja'),
+    ('zakończone', 'Zakończone'),
+    ('odwołane', 'Odwołane'),
     ]
     
     patient = models.ForeignKey(
@@ -90,12 +68,6 @@ class VisitCard(models.Model):
         verbose_name='Typ wizyty'
     )
     
-    status = models.ForeignKey(
-        StatusType,
-        on_delete=models.CASCADE,
-        related_name='visit_cards',
-        verbose_name='Status'
-    )
     
     questionnaire_completed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -112,6 +84,14 @@ class VisitCard(models.Model):
         null=True,
         blank=True,
         verbose_name='Miejsce wypełnienia ankiety'
+    )
+
+    visit_status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='oczekiwanie',
+        verbose_name='Status karty'
+
     )
     
     questionnaire_date = models.DateField(
