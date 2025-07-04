@@ -12,4 +12,5 @@ urlpatterns = [
     path('', include('users.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
     path('wizyty/', include('visits.urls')),
+    path('ewus/', include('ewus.urls'))
 ]
