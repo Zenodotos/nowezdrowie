@@ -91,6 +91,7 @@
 {% endif %}
 <div class="mb-4">
     <div class="flex items-center gap-2">
+      {% if insurance_info.status != 'not_checked' %}
         <span class="badge {{ insurance_info.badge_class }}">
             {{ insurance_info.icon }} {{ insurance_info.message }}
         </span>
@@ -105,11 +106,14 @@
                 <span class="text-info cursor-help">ℹ️</span>
             </div>
         {% endif %}
-        
+        {% endif %}
         <!-- Link do odświeżenia -->
-        <a href="{% url 'patients:detail' patient.pk %}?refresh=1" class="btn btn-ghost btn-xs">
-            🔄 Odśwież
-        </a>
+        <form method="get" style="display: inline;">
+    <input type="hidden" name="refresh" value="1">
+    <button type="submit" class="btn btn-ghost btn-xs">
+        🔍 Sprawdź ubezpieczenie
+    </button>
+</form>
     </div>
     
   

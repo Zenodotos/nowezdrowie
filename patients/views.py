@@ -137,8 +137,17 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
                 'visit_card': current_visit_40plus
             }
         
-        # Sprawdź ubezpieczenie eWUS
-        insurance_info = self._check_insurance(patient)
+        # Sprawdź ubezpieczenie TYLKO gdy refresh=1
+        insurance_info = None
+        if self.request.GET.get('refresh') == '1':
+            insurance_info = self._check_insurance(patient)
+        else:
+            insurance_info = {
+                'status': 'not_checked',
+                'message': 'Kliknij aby sprawdzić',
+                'badge_class': 'badge-neutral',
+                'icon': '🔍'
+            }
         
         context.update({
             'page_title': f'Pacjent: {patient.get_decrypted_full_name()}',
@@ -147,7 +156,7 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
             'visit_40plus_status': visit_40plus_status,
             'visit_count': patient.visit_cards.count(),
             'last_visit': patient.visit_cards.order_by('-created_at').first(),
-            'insurance_info': insurance_info,  # Nowa informacja
+            'insurance_info': insurance_info,
         })
         
         return context
