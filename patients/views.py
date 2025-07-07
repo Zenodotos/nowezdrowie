@@ -137,6 +137,9 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
                 'visit_card': current_visit_40plus
             }
         
+        # Sprawdź ubezpieczenie eWUS
+        insurance_info = self._check_insurance(patient)
+        
         context.update({
             'page_title': f'Pacjent: {patient.get_decrypted_full_name()}',
             'can_start_40plus': patient.can_start_40plus_visit,
@@ -144,11 +147,70 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
             'visit_40plus_status': visit_40plus_status,
             'visit_count': patient.visit_cards.count(),
             'last_visit': patient.visit_cards.order_by('-created_at').first(),
+            'insurance_info': insurance_info,  # Nowa informacja
         })
         
         return context
-
-
+    
+    def _check_insurance(self, patient):
+        """Sprawdza ubezpieczenie pacjenta"""
+        if not self.request.session.get('ewus_session'):
+            return {
+                'status': 'no_session',
+                'message': 'Brak sesji eWUS',
+                'badge_class': 'badge-warning',
+                'icon': '⚠️'
+            }
+        
+        try:
+            from ewus.utils.ewus_client import EWUSClient, InsuranceStatus
+            client = EWUSClient(test_environment=True)
+            client.restore_session(self.request.session['ewus_session'])
+            
+            pesel = patient.get_decrypted_pesel()
+            result = client.check_insurance(pesel)
+            
+            if result.patient.insurance_status == InsuranceStatus.AKTYWNY:
+                return {
+                    'status': 'active',
+                    'message': 'Ubezpieczenie aktywne',
+                    'badge_class': 'badge-success',
+                    'icon': '✅',
+                    'details': result
+                }
+            elif result.patient.insurance_status == InsuranceStatus.NIEAKTYWNY:
+                return {
+                    'status': 'inactive',
+                    'message': 'Brak ubezpieczenia',
+                    'badge_class': 'badge-warning',
+                    'icon': '⚠️',
+                    'details': result
+                }
+            elif result.patient.insurance_status == InsuranceStatus.PESEL_NIEAKTUALNY:
+                return {
+                    'status': 'invalid',
+                    'message': 'PESEL nieaktualny',
+                    'badge_class': 'badge-error',
+                    'icon': '❌',
+                    'details': result
+                }
+            else:
+                return {
+                    'status': 'unknown',
+                    'message': 'Status nieznany',
+                    'badge_class': 'badge-neutral',
+                    'icon': '❓',
+                    'details': result
+                }
+                
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'Błąd: {str(e)}',
+                'badge_class': 'badge-error',
+                'icon': '❌'
+            }
+        
 class PatientCreateView(LoginRequiredMixin, CreateView):
     model = Patient
     form_class = PatientForm
@@ -249,30 +311,3 @@ def start_40plus_visit(request, pk):
         messages.error(request, f"Błąd podczas tworzenia wizyty: {str(e)}")
     
     return redirect('patients:detail', pk=pk)
-
-@login_required
-def check_patient_insurance(request, pk):
-    """AJAX sprawdzenie ubezpieczenia pacjenta"""
-    if not request.session.get('ewus_session'):
-        return JsonResponse({'error': 'Brak sesji eWUS'}, status=400)
-    
-    patient = get_object_or_404(Patient, pk=pk)
-    
-    try:
-        client = EWUSClient(test_environment=True)
-        client.restore_session(request.session['ewus_session'])
-        
-        pesel = patient.get_decrypted_pesel()
-        result = client.check_insurance(pesel)
-        
-        return JsonResponse({
-            'success': True,
-            'patient_name': f"{result.patient.first_name} {result.patient.last_name}",
-            'insurance_status': result.patient.insurance_status.value,
-            'status_symbol': result.patient.status_symbol,
-            'expiration_date': result.patient.expiration_date.strftime('%Y-%m-%d') if result.patient.expiration_date else None,
-            'notes': result.notes,
-            'is_valid': result.is_valid
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)

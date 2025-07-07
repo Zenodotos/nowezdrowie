@@ -141,10 +141,9 @@ def verify_2fa(request):
                     request.session['ewus_session'] = client.save_session_to_dict()
                     messages.success(request, 'połączono z ewus')
                 else: 
-                    messages.error(request, f'połączono z ewus {status}')
-            except Exception:
-                messages.error(request, f'nie udało sie ewus')
-
+                    messages.successE(request, f'połączono z ewus {status}')
+            except Exception as e:
+                messages.error(request, f'nie udało sie ewus {e}')
             del request.session['pre_2fa_user_id']
             return redirect('users:dashboard')
         else:

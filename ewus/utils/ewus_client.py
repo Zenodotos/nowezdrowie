@@ -1136,8 +1136,7 @@ class EWUSClient:
             raise InputException("Nieprawidłowy format numeru PESEL")
         
         try:
-            if self.test_environment:
-                return self._simulate_check_response(pesel)
+
             
             # W środowisku produkcyjnym wyślij prawdziwe żądanie
             xml_request = self._create_check_cwu_xml(pesel)
@@ -1389,6 +1388,47 @@ class EWUSClient:
             operator_type=OperatorType.SWIADCZENIODAWCA,
             provider_id=provider_id
         )
+    def save_session_to_dict(self) -> Dict:
+        """
+        Zapisuje sesję do słownika (do serializacji)
+        
+        Returns:
+            Słownik z danymi sesji
+        """
+        if not self.session:
+            raise SessionException("Brak aktywnej sesji do zapisania")
+        
+        return {
+            'session_id': self.session.session_id,
+            'auth_token': self.session.auth_token,
+            'login_time': self.session.login_time.isoformat(),
+            'operator_id': self.session.operator_id,
+            'ow_code': self.session.ow_code,
+            'expires_at': self.session.expires_at.isoformat()
+        }
+
+    def restore_session(self, session_dict: Dict) -> None:
+        """
+        Odtwarza sesję ze słownika
+        
+        Args:
+            session_dict: Słownik z danymi sesji
+        """
+        try:
+            self.session = SessionInfo(
+                session_id=session_dict['session_id'],
+                auth_token=session_dict['auth_token'],
+                login_time=datetime.fromisoformat(session_dict['login_time']),
+                operator_id=session_dict['operator_id'],
+                ow_code=session_dict['ow_code'],
+                expires_at=datetime.fromisoformat(session_dict['expires_at'])
+            )
+            
+            if self.debug:
+                print(f"🔧 DEBUG - Przywrócono sesję: {self.session.session_id}")
+                
+        except (KeyError, ValueError) as e:
+            raise SessionException(f"Błąd przywracania sesji: {str(e)}")
 
 # Przykład użycia
 if __name__ == "__main__":
