@@ -1,5 +1,6 @@
 import requests
 import xml.etree.ElementTree as ET
+import html
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List, Tuple
 from dataclasses import dataclass
@@ -421,6 +422,469 @@ class EWUSClient:
                 
         except ET.ParseError as e:
             raise EWUSException(f"Nie można sparsować odpowiedzi XML: {str(e)[:200]}... Odpowiedź: {response_text[:300]}...")
+        
+    def _parse_login_response(self, response_text: str) -> SessionInfo:
+        """
+        Parsuje odpowiedź SOAP z logowania
+        
+        Args:
+            response_text: Odpowiedź SOAP z logowania
+            
+        Returns:
+            Informacje o sesji
+        """
+        try:
+            if self.debug:
+                print("🔧 DEBUG - Parsowanie odpowiedzi logowania...")
+                print(f"🔧 DEBUG - Długość odpowiedzi: {len(response_text)} znaków")
+                
+            root = ET.fromstring(response_text)
+            
+            if self.debug:
+                print(f"🔧 DEBUG - Root element: {root.tag}")
+                print(f"🔧 DEBUG - Root namespaces: {root.attrib}")
+                
+                # Wyświetl wszystkie elementy w odpowiedzi
+                print("🔧 DEBUG - Wszystkie elementy w odpowiedzi:")
+                for elem in root.iter():
+                    print(f"  - {elem.tag}: {elem.text} | attrib: {elem.attrib}")
+            
+            # Sprawdź czy nie ma błędu SOAP fault
+            fault = root.find(".//soapenv:Fault", {"soapenv": "http://schemas.xmlsoap.org/soap/envelope/"})
+            if fault is None:
+                fault = root.find(".//soap:Fault", {"soap": "http://schemas.xmlsoap.org/soap/envelope/"})
+            
+            if fault is not None:
+                if self.debug:
+                    print("🔧 DEBUG - Znaleziono SOAP fault w odpowiedzi!")
+                    fault_code = fault.find("faultcode")
+                    fault_string = fault.find("faultstring") 
+                    if fault_code is not None:
+                        print(f"🔧 DEBUG - Fault code: {fault_code.text}")
+                    if fault_string is not None:
+                        print(f"🔧 DEBUG - Fault string: {fault_string.text}")
+                self._parse_soap_fault(response_text)
+            
+            # Sprawdź błędy NFZ (com:faultcode)
+            fault_code_nfz = root.find(".//com:faultcode", {"com": "http://xml.kamsoft.pl/ws/common"})
+            if fault_code_nfz is not None:
+                if self.debug:
+                    print("🔧 DEBUG - Znaleziono NFZ fault code!")
+                self._parse_soap_fault(response_text)
+            
+            # Szukaj session ID - używamy namespace który faktycznie jest w odpowiedzi
+            session_elem = None
+            
+            # Spróbuj z namespace ns1 (jak w odpowiedzi)
+            try:
+                session_elem = root.find(".//ns1:session[@id]", {"ns1": "http://xml.kamsoft.pl/ws/common"})
+                if session_elem is not None:
+                    if self.debug:
+                        print("🔧 DEBUG - Znaleziono session element z prefiksem ns1")
+            except Exception as e:
+                if self.debug:
+                    print(f"🔧 DEBUG - Błąd z ns1: {e}")
+            
+            # Jeśli nie ma z ns1, spróbuj bez namespace (bezpośrednie wyszukiwanie)
+            if session_elem is None:
+                if self.debug:
+                    print("🔧 DEBUG - Szukam session bez namespace...")
+                for elem in root.iter():
+                    if 'session' in elem.tag and 'id' in elem.attrib:
+                        session_elem = elem
+                        if self.debug:
+                            print(f"🔧 DEBUG - Znaleziono session element: {elem.tag}")
+                        break
+            
+            # Jeśli nie ma session w nagłówku, sprawdź w body
+            if session_elem is None:
+                if self.debug:
+                    print("🔧 DEBUG - Nie znaleziono session w nagłówku, szukam w body...")
+                
+                # Sprawdź wszystkie elementy z atrybutem id
+                for elem in root.iter():
+                    if 'id' in elem.attrib and ('session' in elem.tag.lower() or len(elem.attrib.get('id', '')) > 10):
+                        session_elem = elem
+                        if self.debug:
+                            print(f"🔧 DEBUG - Potencjalny session element: {elem.tag} = {elem.attrib}")
+                        break
+            
+            if session_elem is None:
+                if self.debug:
+                    print("🔧 DEBUG - BŁĄD: Brak session ID w odpowiedzi!")
+                    print("🔧 DEBUG - Wszystkie elementy z atrybutem 'id':")
+                    for elem in root.iter():
+                        if 'id' in elem.attrib:
+                            print(f"  - {elem.tag}: id='{elem.attrib['id']}'")
+                raise EWUSException("Brak session ID w odpowiedzi logowania")
+            
+            session_id = session_elem.get("id")
+            if self.debug:
+                print(f"🔧 DEBUG - Session ID: {session_id}")
+            
+            # Szukaj auth token - używamy ten sam sposób co dla session
+            token_elem = None
+            
+            # Spróbuj z namespace ns1 (jak w odpowiedzi)
+            try:
+                token_elem = root.find(".//ns1:authToken[@id]", {"ns1": "http://xml.kamsoft.pl/ws/common"})
+                if token_elem is not None:
+                    if self.debug:
+                        print("🔧 DEBUG - Znaleziono authToken element z prefiksem ns1")
+            except Exception as e:
+                if self.debug:
+                    print(f"🔧 DEBUG - Błąd z ns1 dla token: {e}")
+            
+            # Jeśli nie ma z ns1, spróbuj bez namespace (bezpośrednie wyszukiwanie)
+            if token_elem is None:
+                if self.debug:
+                    print("🔧 DEBUG - Szukam authToken bez namespace...")
+                for elem in root.iter():
+                    if ('token' in elem.tag.lower() or 'authtoken' in elem.tag.lower()) and 'id' in elem.attrib:
+                        token_elem = elem
+                        if self.debug:
+                            print(f"🔧 DEBUG - Znaleziono token element: {elem.tag}")
+                        break
+            
+            if token_elem is None:
+                if self.debug:
+                    print("🔧 DEBUG - BŁĄD: Brak auth token w odpowiedzi!")
+                    print("🔧 DEBUG - Wszystkie elementy z 'token' lub 'auth' w nazwie:")
+                    for elem in root.iter():
+                        if 'token' in elem.tag.lower() or 'auth' in elem.tag.lower():
+                            print(f"  - {elem.tag}: {elem.text} | attrib: {elem.attrib}")
+                raise EWUSException("Brak auth token w odpowiedzi logowania")
+            
+            auth_token = token_elem.get("id")
+            if self.debug:
+                print(f"🔧 DEBUG - Auth Token: {auth_token}")
+            
+            # Szukaj informacji o operatorze
+            operator_id = None
+            
+            # Sprawdź loginReturn dla dodatkowych informacji - używaj właściwy namespace
+            login_return = None
+            try:
+                login_return = root.find(".//ns1:loginReturn", {"ns1": "http://xml.kamsoft.pl/ws/kaas/login_types"})
+                if login_return is not None:
+                    if self.debug:
+                        print("🔧 DEBUG - Znaleziono loginReturn z ns1")
+            except Exception as e:
+                if self.debug:
+                    print(f"🔧 DEBUG - Błąd z ns1 dla loginReturn: {e}")
+            
+            # Jeśli nie ma z ns1, spróbuj bezpośrednio
+            if login_return is None:
+                if self.debug:
+                    print("🔧 DEBUG - Szukam loginReturn bez namespace...")
+                for elem in root.iter():
+                    if 'loginreturn' in elem.tag.lower():
+                        login_return = elem
+                        if self.debug:
+                            print(f"🔧 DEBUG - Znaleziono loginReturn element: {elem.tag}")
+                        break
+            
+            if login_return is not None and login_return.text:
+                if self.debug:
+                    print(f"🔧 DEBUG - LoginReturn message: {login_return.text}")
+                
+                # Próbuj wyciągnąć operator ID z komunikatu
+                message = login_return.text
+                if self.debug:
+                    print(f"🔧 DEBUG - LoginReturn message (raw): {message}")
+                    # Dekoduj HTML entities dla czytelności
+                    try:
+                        import html
+                        decoded_message = html.unescape(message)
+                        print(f"🔧 DEBUG - LoginReturn message (decoded): {decoded_message}")
+                    except:
+                        decoded_message = message
+                # Szukaj wzorców jak "ID operatora: 12345" itp.
+                import re
+                patterns = [
+                    r'operatora?\s*:?\s*(\w+)',
+                    r'operator\s*ID\s*:?\s*(\w+)',
+                    r'ID\s*:?\s*(\w+)'
+                ]
+                
+                for pattern in patterns:
+                    match = re.search(pattern, message, re.IGNORECASE)
+                    if match:
+                        operator_id = match.group(1)
+                        if self.debug:
+                            print(f"🔧 DEBUG - Operator ID z komunikatu: {operator_id}")
+                        break
+            
+            # Jeśli nie znaleziono operator ID, utwórz na podstawie session
+            if not operator_id:
+                operator_id = f"OP_{session_id[:8]}"
+                if self.debug:
+                    print(f"🔧 DEBUG - Wygenerowany Operator ID: {operator_id}")
+            
+            # Domyślny OW code (zostanie nadpisany w login())
+            ow_code = "00"
+            
+            session_info = SessionInfo(
+                session_id=session_id,
+                auth_token=auth_token,
+                login_time=datetime.now(),
+                operator_id=operator_id,
+                ow_code=ow_code,
+                expires_at=datetime.now() + timedelta(hours=8)
+            )
+            
+            if self.debug:
+                print("🔧 DEBUG - SessionInfo utworzony pomyślnie!")
+                print(f"🔧 DEBUG - Session ID: {session_info.session_id}")
+                print(f"🔧 DEBUG - Auth Token: {session_info.auth_token}")
+                print(f"🔧 DEBUG - Operator ID: {session_info.operator_id}")
+                print(f"🔧 DEBUG - Expires at: {session_info.expires_at}")
+                
+            return session_info
+            
+        except ET.ParseError as e:
+            error_msg = f"Nie można sparsować odpowiedzi logowania XML: {str(e)}"
+            if self.debug:
+                print(f"🔧 DEBUG - BŁĄD XML Parse: {error_msg}")
+                print(f"🔧 DEBUG - Problematyczny XML (pierwsze 500 znaków):")
+                print(response_text[:500])
+            raise EWUSException(error_msg)
+            
+        except Exception as e:
+            error_msg = f"Błąd podczas parsowania logowania: {str(e)}"
+            if self.debug:
+                print(f"🔧 DEBUG - BŁĄD parsowania: {error_msg}")
+                import traceback
+                traceback.print_exc()
+            raise EWUSException(error_msg)
+    
+    def _determine_login_status(self, response_text: str) -> LoginStatus:
+        """
+        Określa status logowania na podstawie odpowiedzi
+        
+        Args:
+            response_text: Odpowiedź SOAP z logowania
+            
+        Returns:
+            Status logowania
+        """
+        try:
+            root = ET.fromstring(response_text)
+            
+            # Znajdź komunikat loginReturn - używaj bezpieczne wyszukiwanie
+            login_return = None
+            
+            # Spróbuj z namespace ns1
+            try:
+                login_return = root.find(".//ns1:loginReturn", {"ns1": "http://xml.kamsoft.pl/ws/kaas/login_types"})
+                if login_return is not None:
+                    if self.debug:
+                        print("🔧 DEBUG - Znaleziono loginReturn dla statusu z ns1")
+            except Exception as e:
+                if self.debug:
+                    print(f"🔧 DEBUG - Błąd z ns1 dla status loginReturn: {e}")
+            
+            # Jeśli nie ma z ns1, spróbuj bezpośrednio
+            if login_return is None:
+                if self.debug:
+                    print("🔧 DEBUG - Szukam loginReturn dla statusu bez namespace...")
+                for elem in root.iter():
+                    if 'loginreturn' in elem.tag.lower():
+                        login_return = elem
+                        if self.debug:
+                            print(f"🔧 DEBUG - Znaleziono loginReturn dla statusu: {elem.tag}")
+                        break
+            
+            if login_return is not None and login_return.text:
+                message = login_return.text
+                if self.debug:
+                    print(f"🔧 DEBUG - Sprawdzam status z komunikatu: {message}")
+                
+                # Dekoduj HTML entities
+                try:
+                    import html
+                    message = html.unescape(message)
+                    if self.debug:
+                        print(f"🔧 DEBUG - Dekodowany komunikat: {message}")
+                except:
+                    pass
+                
+                # Sprawdź kody statusu zgodnie z dokumentacją NFZ
+                if "[000]" in message:
+                    if self.debug:
+                        print("🔧 DEBUG - Status: SUCCESS [000]")
+                    return LoginStatus.SUCCESS
+                elif "[001]" in message:
+                    if self.debug:
+                        print("🔧 DEBUG - Status: PASSWORD_EXPIRES_SOON [001]")
+                    return LoginStatus.PASSWORD_EXPIRES_SOON
+                elif "[002]" in message:
+                    if self.debug:
+                        print("🔧 DEBUG - Status: PASSWORD_EXPIRES_TOMORROW [002]")
+                    return LoginStatus.PASSWORD_EXPIRES_TOMORROW
+                elif "[003]" in message:
+                    if self.debug:
+                        print("🔧 DEBUG - Status: PASSWORD_EXPIRES_TODAY [003]")
+                    return LoginStatus.PASSWORD_EXPIRES_TODAY
+            
+            # Domyślnie sukces jeśli nie ma komunikatu o wygaśnięciu hasła
+            if self.debug:
+                print("🔧 DEBUG - Status: domyślny SUCCESS")
+            return LoginStatus.SUCCESS
+            
+        except ET.ParseError as e:
+            if self.debug:
+                print(f"🔧 DEBUG - Błąd parsowania dla statusu: {e}")
+            return LoginStatus.SUCCESS
+    
+    def _parse_check_cwu_response(self, response_text: str, pesel: str) -> InsuranceCheckResult:
+        """
+        Parsuje odpowiedź SOAP z sprawdzania ubezpieczenia
+        
+        Args:
+            response_text: Odpowiedź SOAP z sprawdzania ubezpieczenia
+            pesel: PESEL pacjenta (dla kontekstu)
+            
+        Returns:
+            Wynik sprawdzenia ubezpieczenia
+        """
+        try:
+            root = ET.fromstring(response_text)
+            
+            # Sprawdź czy nie ma błędu
+            if root.find(".//soapenv:Fault", {"soapenv": "http://schemas.xmlsoap.org/soap/envelope/"}) is not None:
+                self._parse_soap_fault(response_text)
+            
+            # Znajdź główny element odpowiedzi
+            response_elem = root.find(".//ewus:status_cwu_odp", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            if response_elem is None:
+                raise EWUSException("Brak elementu status_cwu_odp w odpowiedzi")
+            
+            # Podstawowe informacje o operacji
+            operation_id = response_elem.get("id_operacji", str(uuid.uuid4()).replace("-", "")[:20])
+            operation_date_str = response_elem.get("data_czas_operacji")
+            
+            try:
+                operation_date = datetime.fromisoformat(operation_date_str.replace(" ", "T")) if operation_date_str else datetime.now()
+            except:
+                operation_date = datetime.now()
+            
+            # Informacje o systemie NFZ
+            system_nfz = root.find(".//ewus:system_nfz", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            
+            # Status CWU
+            status_cwu_elem = root.find(".//ewus:status_cwu", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            status_cwu = int(status_cwu_elem.text) if status_cwu_elem is not None and status_cwu_elem.text else 0
+            
+            # Dane operatora
+            operator_elem = root.find(".//ewus:id_operatora", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            operator_id = operator_elem.text if operator_elem is not None else self.session.operator_id
+            
+            ow_elem = root.find(".//ewus:id_ow", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            ow_code = ow_elem.text if ow_elem is not None else self.session.ow_code
+            
+            provider_elem = root.find(".//ewus:id_swiad", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            provider_id = provider_elem.text if provider_elem is not None else None
+            
+            # Status ubezpieczenia
+            status_ubezp_elem = root.find(".//ewus:status_ubezp", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            insurance_status_val = 0
+            status_symbol = None
+            
+            if status_ubezp_elem is not None:
+                insurance_status_val = int(status_ubezp_elem.text) if status_ubezp_elem.text else 0
+                status_symbol = status_ubezp_elem.get("ozn_rec")
+            
+            # Mapowanie statusu ubezpieczenia
+            if status_cwu == 1:
+                if insurance_status_val == 1:
+                    insurance_status = InsuranceStatus.AKTYWNY
+                    is_valid = True
+                    notes = ["Pacjent ma aktywne ubezpieczenie"]
+                else:
+                    insurance_status = InsuranceStatus.NIEAKTYWNY
+                    is_valid = False
+                    notes = ["Brak aktywnego ubezpieczenia"]
+            elif status_cwu == -1:
+                insurance_status = InsuranceStatus.PESEL_NIEAKTUALNY
+                is_valid = False
+                notes = ["PESEL nieaktualny - anulowany przez MSW"]
+            else:
+                insurance_status = InsuranceStatus.NIEAKTYWNY
+                is_valid = False
+                notes = ["Brak pozycji w systemie CWU"]
+            
+            # Dane pacjenta
+            pesel_elem = root.find(".//ewus:numer_pesel", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            pesel_response = pesel_elem.text if pesel_elem is not None else pesel
+            
+            first_name_elem = root.find(".//ewus:imie", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            first_name = first_name_elem.text if first_name_elem is not None else None
+            
+            last_name_elem = root.find(".//ewus:nazwisko", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            last_name = last_name_elem.text if last_name_elem is not None else None
+            
+            # Data ważności potwierdzenia
+            expiration_elem = root.find(".//ewus:data_waznosci_potwierdzenia", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            expiration_date = None
+            if expiration_elem is not None and expiration_elem.text:
+                try:
+                    expiration_date = datetime.fromisoformat(expiration_elem.text.replace(" ", "T"))
+                except:
+                    pass
+            
+            # Informacje dodatkowe
+            additional_info = []
+            info_dodatkowe = root.find(".//ewus:informacje_dodatkowe", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"})
+            if info_dodatkowe is not None:
+                for info in info_dodatkowe.findall(".//ewus:informacja", {"ewus": "https://ewus.nfz.gov.pl/ws/broker/ewus/status_cwu/v5"}):
+                    kod = info.get("kod", "")
+                    poziom = info.get("poziom", "")
+                    wartosc = info.get("wartosc", "")
+                    
+                    additional_info.append({
+                        "kod": kod,
+                        "poziom": poziom,
+                        "wartosc": wartosc
+                    })
+                    
+                    # Dodaj informacje o specjalnych statusach do notatek
+                    if "COVID" in kod.upper():
+                        if "ZASWIADCZENIE" in kod.upper():
+                            notes.append("Posiada zaświadczenie o szczepieniu COVID-19")
+                        elif "KWARANTANNA" in kod.upper():
+                            notes.append("Objęty kwarantanną COVID-19")
+                        elif "IZOLACJA" in kod.upper():
+                            notes.append("W izolacji domowej COVID-19")
+                    elif "UKR" in kod.upper():
+                        notes.append("Uprawnienia dla obywateli Ukrainy")
+            
+            # Utworzenie obiektu PatientInfo
+            patient = PatientInfo(
+                pesel=pesel_response,
+                first_name=first_name,
+                last_name=last_name,
+                insurance_status=insurance_status,
+                status_symbol=status_symbol,
+                expiration_date=expiration_date,
+                additional_info=additional_info if additional_info else None
+            )
+            
+            return InsuranceCheckResult(
+                operation_id=operation_id,
+                operation_date=operation_date,
+                patient=patient,
+                operator_id=operator_id,
+                ow_code=ow_code,
+                provider_id=provider_id,
+                is_valid=is_valid,
+                notes=notes
+            )
+            
+        except ET.ParseError as e:
+            raise EWUSException(f"Nie można sparsować odpowiedzi sprawdzania ubezpieczenia: {str(e)}")
+        except Exception as e:
+            raise EWUSException(f"Błąd podczas parsowania odpowiedzi: {str(e)}")
     
     def _simulate_login_response(self, credentials: LoginCredentials) -> SessionInfo:
         """
@@ -541,19 +1005,14 @@ class EWUSClient:
             Tuple zawierający informacje o sesji i status logowania
         """
         try:
-            if self.test_environment:
-                # W środowisku testowym symulujemy logowanie
-                session_info = self._simulate_login_response(credentials)
-                self.session = session_info
-                return session_info, LoginStatus.SUCCESS
-            
-            # W środowisku produkcyjnym wyślij prawdziwe żądanie SOAP
+            # Utworzenie XML żądania
             xml_request = self._create_login_xml(credentials)
             
             if self.debug:
                 print("🔧 DEBUG - Wysyłany XML:")
                 print(xml_request)
                 print("🔧 DEBUG - URL:", self.auth_url)
+                print("🔧 DEBUG - Środowisko testowe:", self.test_environment)
             
             headers = {
                 'Content-Type': 'text/xml; charset=utf-8',
@@ -563,30 +1022,101 @@ class EWUSClient:
             if self.debug:
                 print("🔧 DEBUG - Nagłówki:", headers)
             
-            response = requests.post(self.auth_url, data=xml_request, headers=headers)
+            # Wysłanie żądania SOAP
+            response = requests.post(self.auth_url, data=xml_request, headers=headers, timeout=30)
             
             if self.debug:
-                print("🔧 DEBUG - Status kod:", response.status_code)
-                print("🔧 DEBUG - Odpowiedź:")
+                print("🔧 DEBUG - Status kod odpowiedzi:", response.status_code)
+                print("🔧 DEBUG - Nagłówki odpowiedzi:", dict(response.headers))
+                print("🔧 DEBUG - Pełna odpowiedź XML:")
+                print("=" * 80)
                 print(response.text)
+                print("=" * 80)
             
+            # Sprawdzenie statusu HTTP
             if response.status_code != 200:
+                if self.debug:
+                    print(f"🔧 DEBUG - BŁĄD HTTP: Status {response.status_code}")
+                    print(f"🔧 DEBUG - Treść błędu: {response.text[:500]}...")
+                
                 # Sprawdź czy to błąd SOAP czy HTTP
                 if response.status_code == 500:
                     # Błąd 500 może zawierać SOAP fault
+                    if self.debug:
+                        print("🔧 DEBUG - Próba parsowania SOAP fault z błędu 500...")
                     self._parse_soap_fault(response.text)
                 else:
                     raise EWUSException(f"Błąd HTTP {response.status_code}: {response.text[:300]}...")
             
-            # Parsowanie odpowiedzi (implementacja dla środowiska produkcyjnego)
-            # ... kod parsowania odpowiedzi SOAP ...
+            # Sprawdzenie czy odpowiedź zawiera XML
+            if not response.text.strip():
+                raise EWUSException("Pusta odpowiedź serwera")
             
-            raise NotImplementedError("Środowisko produkcyjne nie jest jeszcze zaimplementowane")
+            if not response.text.strip().startswith('<?xml') and not response.text.strip().startswith('<'):
+                if self.debug:
+                    print("🔧 DEBUG - BŁĄD: Odpowiedź nie jest XML-em!")
+                    print(f"🔧 DEBUG - Pierwsze 200 znaków: {response.text[:200]}")
+                raise EWUSException(f"Odpowiedź nie jest w formacie XML: {response.text[:200]}...")
+            
+            # Parsowanie odpowiedzi logowania
+            if self.debug:
+                print("🔧 DEBUG - Rozpoczynam parsowanie odpowiedzi logowania...")
+            
+            session_info = self._parse_login_response(response.text)
+            session_info.ow_code = credentials.domain  # Ustawiamy prawdziwy kod OW
+            
+            # Określenie statusu logowania
+            if self.debug:
+                print("🔧 DEBUG - Określam status logowania...")
+            
+            login_status = self._determine_login_status(response.text)
+            
+            if self.debug:
+                print(f"🔧 DEBUG - Status logowania: {login_status}")
+                print(f"🔧 DEBUG - Session ID: {session_info.session_id}")
+                print(f"🔧 DEBUG - Auth Token: {session_info.auth_token}")
+                print(f"🔧 DEBUG - Operator ID: {session_info.operator_id}")
+                print(f"🔧 DEBUG - OW Code: {session_info.ow_code}")
+            
+            # Zapisanie sesji
+            self.session = session_info
+            
+            if self.debug:
+                print("🔧 DEBUG - Logowanie zakończone pomyślnie!")
+            
+            return session_info, login_status
+            
+        except requests.exceptions.Timeout:
+            error_msg = "Timeout połączenia z serwerem eWUS"
+            if self.debug:
+                print(f"🔧 DEBUG - BŁĄD: {error_msg}")
+            raise EWUSException(error_msg)
+            
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f"Błąd połączenia z serwerem eWUS: {str(e)}"
+            if self.debug:
+                print(f"🔧 DEBUG - BŁĄD POŁĄCZENIA: {error_msg}")
+            raise EWUSException(error_msg)
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Błąd HTTP podczas logowania: {str(e)}"
+            if self.debug:
+                print(f"🔧 DEBUG - BŁĄD HTTP: {error_msg}")
+            raise EWUSException(error_msg)
             
         except Exception as e:
             if isinstance(e, EWUSException):
+                if self.debug:
+                    print(f"🔧 DEBUG - Przekazuję wyjątek eWUS: {str(e)}")
                 raise
-            raise EWUSException(f"Błąd podczas logowania: {str(e)}")
+            
+            error_msg = f"Nieoczekiwany błąd podczas logowania: {str(e)}"
+            if self.debug:
+                print(f"🔧 DEBUG - NIEOCZEKIWANY BŁĄD: {error_msg}")
+                import traceback
+                print("🔧 DEBUG - Stack trace:")
+                traceback.print_exc()
+            raise EWUSException(error_msg)
     
     def check_insurance(self, pesel: str) -> InsuranceCheckResult:
         """
@@ -611,60 +1141,42 @@ class EWUSClient:
             
             # W środowisku produkcyjnym wyślij prawdziwe żądanie
             xml_request = self._create_check_cwu_xml(pesel)
+            
+            if self.debug:
+                print("🔧 DEBUG - Wysyłany XML (check insurance):")
+                print(xml_request)
+                print("🔧 DEBUG - URL:", self.broker_url)
+            
             headers = {
                 'Content-Type': 'text/xml; charset=utf-8',
                 'SOAPAction': 'executeService'
             }
             
+            if self.debug:
+                print("🔧 DEBUG - Nagłówki (check insurance):", headers)
+            
             response = requests.post(self.broker_url, data=xml_request, headers=headers)
             
-            if response.status_code != 200:
-                raise EWUSException(f"Błąd HTTP: {response.status_code}")
+            if self.debug:
+                print("🔧 DEBUG - Status kod (check insurance):", response.status_code)
+                print("🔧 DEBUG - Odpowiedź (check insurance):")
+                print(response.text)
             
-            # Parsowanie odpowiedzi (implementacja dla środowiska produkcyjnego)
-            raise NotImplementedError("Środowisko produkcyjne nie jest jeszcze zaimplementowane")
+            if response.status_code != 200:
+                if response.status_code == 500:
+                    self._parse_soap_fault(response.text)
+                else:
+                    raise EWUSException(f"Błąd HTTP {response.status_code}: {response.text[:300]}...")
+            
+            # Parsowanie odpowiedzi z sprawdzania ubezpieczenia
+            result = self._parse_check_cwu_response(response.text, pesel)
+            return result
             
         except Exception as e:
             if isinstance(e, EWUSException):
                 raise
             raise EWUSException(f"Błąd podczas sprawdzania ubezpieczenia: {str(e)}")
-    def save_session_to_dict(self) -> dict:
-        """Zapisuje sesję do słownika dla Django session"""
-        if not self.session:
-            return {}
-        
-        return {
-            'session_id': self.session.session_id,
-            'auth_token': self.session.auth_token,
-            'login_time': self.session.login_time.isoformat(),
-            'operator_id': self.session.operator_id,
-            'ow_code': self.session.ow_code,
-            'expires_at': self.session.expires_at.isoformat()
-        }
     
-    def restore_session(self, session_dict: dict) -> bool:
-        """Odtwarza sesję ze słownika Django session"""
-        if not session_dict:
-            return False
-        
-        try:
-            self.session = SessionInfo(
-                session_id=session_dict['session_id'],
-                auth_token=session_dict['auth_token'],
-                login_time=datetime.fromisoformat(session_dict['login_time']),
-                operator_id=session_dict['operator_id'],
-                ow_code=session_dict['ow_code'],
-                expires_at=datetime.fromisoformat(session_dict['expires_at'])
-            )
-            
-            # Sprawdź czy sesja nie wygasła
-            if datetime.now() > self.session.expires_at:
-                self.session = None
-                return False
-            
-            return True
-        except (KeyError, ValueError):
-            return False
     def change_password(self, credentials: LoginCredentials, 
                        old_password: str, new_password: str) -> bool:
         """
@@ -688,7 +1200,46 @@ class EWUSClient:
                 raise AuthenticationException("Nieprawidłowe stare hasło")
         
         # Implementacja dla środowiska produkcyjnego
-        raise NotImplementedError("Środowisko produkcyjne nie jest jeszcze zaimplementowane")
+        try:
+            xml_request = self._create_change_password_xml(credentials, old_password, new_password)
+            
+            if self.debug:
+                print("🔧 DEBUG - Wysyłany XML (change password):")
+                print(xml_request)
+            
+            headers = {
+                'Content-Type': 'text/xml; charset=utf-8',
+                'SOAPAction': 'changePassword'
+            }
+            
+            response = requests.post(self.auth_url, data=xml_request, headers=headers)
+            
+            if self.debug:
+                print("🔧 DEBUG - Status kod (change password):", response.status_code)
+                print("🔧 DEBUG - Odpowiedź (change password):")
+                print(response.text)
+            
+            if response.status_code != 200:
+                if response.status_code == 500:
+                    self._parse_soap_fault(response.text)
+                else:
+                    raise EWUSException(f"Błąd HTTP {response.status_code}: {response.text[:300]}...")
+            
+            # Sprawdź czy w odpowiedzi nie ma błędu
+            try:
+                root = ET.fromstring(response.text)
+                if root.find(".//soapenv:Fault", {"soapenv": "http://schemas.xmlsoap.org/soap/envelope/"}) is not None:
+                    self._parse_soap_fault(response.text)
+            except ET.ParseError:
+                pass
+            
+            # Jeśli dotarliśmy tutaj, zmiana hasła przebiegła pomyślnie
+            return True
+            
+        except Exception as e:
+            if isinstance(e, EWUSException):
+                raise
+            raise EWUSException(f"Błąd podczas zmiany hasła: {str(e)}")
     
     def logout(self) -> bool:
         """
@@ -708,12 +1259,23 @@ class EWUSClient:
             
             # W środowisku produkcyjnym wyślij żądanie wylogowania
             xml_request = self._create_logout_xml()
+            
+            if self.debug:
+                print("🔧 DEBUG - Wysyłany XML (logout):")
+                print(xml_request)
+            
             headers = {
                 'Content-Type': 'text/xml; charset=utf-8',
                 'SOAPAction': 'logout'
             }
             
             response = requests.post(self.auth_url, data=xml_request, headers=headers)
+            
+            if self.debug:
+                print("🔧 DEBUG - Status kod (logout):", response.status_code)
+                print("🔧 DEBUG - Odpowiedź (logout):")
+                print(response.text)
+            
             self.session = None
             
             return response.status_code == 200
@@ -830,12 +1392,12 @@ class EWUSClient:
 
 # Przykład użycia
 if __name__ == "__main__":
-    # UWAGA: URL-e produkcyjne zostały poprawione na podstawie AuthService.php i BrokerService.php
+    # System obsługuje pełne środowiska testowe i produkcyjne NFZ
     # Testowy:     https://ewus.nfz.gov.pl/ws-broker-server-ewus-auth-test
-    # Produkcyjny: https://ewus.nfz.gov.pl/ws-broker-server-ewus (NIE auth-prod!)
+    # Produkcyjny: https://ewus.nfz.gov.pl/ws-broker-server-ewus
     
     # Utworzenie klienta w środowisku testowym
-    client = EWUSClient(test_environment=True)
+    client = EWUSClient(test_environment=True, debug=False)
     
     # Utworzenie danych logowania dla lekarza
     credentials = EWUSClient.create_doctor_credentials(

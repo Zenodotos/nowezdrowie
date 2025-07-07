@@ -45,9 +45,9 @@ SHARED_APPS = [
 
     'users',
     'encrypted_fields',
-    'patients',
-    'visits',
-    'examinations',
+
+
+
     'django_otp',
     'django_otp.plugins.otp_totp',
     'django_otp.plugins.otp_static',
@@ -76,6 +76,7 @@ TENANT_APPS = [
     'django_otp.plugins.otp_static',
     'tailwind',
     'theme',
+    'ewus'
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -186,6 +187,8 @@ import os
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY','yLtAL9iWlleMCh34m4TNdvqGCyj9wjb9WpelG3u-yzQ=')
 
 FIELD_ENCRYPTION_HASH_SALT = os.environ.get('PATIENT_SEARCH_SALT')
+
+# PATIENT_SEARCH_SALT = 
 
 CRYPTOGRAPHY_KEY = os.environ.get('FIELD_ENCRYPTION_KEY')
 

@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from visits.models import VisitCard, VisitType
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from ewus.utils.ewus_client import EWUSClient
 
 
 class PatientListView(LoginRequiredMixin, ListView):
@@ -247,3 +249,30 @@ def start_40plus_visit(request, pk):
         messages.error(request, f"Błąd podczas tworzenia wizyty: {str(e)}")
     
     return redirect('patients:detail', pk=pk)
+
+@login_required
+def check_patient_insurance(request, pk):
+    """AJAX sprawdzenie ubezpieczenia pacjenta"""
+    if not request.session.get('ewus_session'):
+        return JsonResponse({'error': 'Brak sesji eWUS'}, status=400)
+    
+    patient = get_object_or_404(Patient, pk=pk)
+    
+    try:
+        client = EWUSClient(test_environment=True)
+        client.restore_session(request.session['ewus_session'])
+        
+        pesel = patient.get_decrypted_pesel()
+        result = client.check_insurance(pesel)
+        
+        return JsonResponse({
+            'success': True,
+            'patient_name': f"{result.patient.first_name} {result.patient.last_name}",
+            'insurance_status': result.patient.insurance_status.value,
+            'status_symbol': result.patient.status_symbol,
+            'expiration_date': result.patient.expiration_date.strftime('%Y-%m-%d') if result.patient.expiration_date else None,
+            'notes': result.notes,
+            'is_valid': result.is_valid
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

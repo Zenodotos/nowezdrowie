@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.urls import reverse_lazy
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp import login as otp_login
+from django.contrib.auth import get_user_model
 from django_otp.util import random_hex
 from .forms import CustomAuthenticationForm
 import qrcode
@@ -13,6 +14,7 @@ from io import BytesIO
 import base64
 from .models import User
 import pyotp
+from ewus.utils.ewus_client import EWUSClient, LoginStatus
 
 
 class TwoFactorLoginView(LoginView):
@@ -53,7 +55,6 @@ def setup_2fa_required(request):
     if not user_id:
         return redirect('users:login')
     
-    from django.contrib.auth import get_user_model
     User = get_user_model()
     user = User.objects.get(id=user_id)
     device = TOTPDevice.objects.filter(user=user, confirmed=False).first()
@@ -123,7 +124,27 @@ def verify_2fa(request):
             # Zaloguj użytkownika z 2FA
             login(request, user)
             otp_login(request, device)
-            
+           
+        if hasattr(user, 'ewuscreds'):
+            ewus_creds = user.ewuscreds
+            try:
+                from ewus.utils.ewus_client import EWUSClient
+                client = EWUSClient(test_environment=True)
+                credentials = EWUSClient.create_doctor_credentials(
+                    domain=ewus_creds.regionId,
+                    login=ewus_creds.login,
+                    password=ewus_creds.password,
+                    doctor_id=ewus_creds.doctorId if ewus_creds.isDoctorIdRequired else None
+                )
+                session_info, status = client.login(credentials)
+                if status == LoginStatus.SUCCESS:
+                    request.session['ewus_session'] = client.save_session_to_dict()
+                    messages.success(request, 'połączono z ewus')
+                else: 
+                    messages.error(request, f'połączono z ewus {status}')
+            except Exception:
+                messages.error(request, f'nie udało sie ewus')
+
             del request.session['pre_2fa_user_id']
             return redirect('users:dashboard')
         else:

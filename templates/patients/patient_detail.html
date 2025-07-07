@@ -89,6 +89,45 @@
   <span>Nie może przystąpić do programu 40+</span>
 </div>
 {% endif %}
+<button id="check-insurance-btn" 
+        data-url="{% url 'patients:check_insurance' patient.pk %}"
+        class="btn btn-primary">
+    Sprawdź ubezpieczenie eWUS
+</button>
+
+<div id="insurance-result" class="mt-4 hidden"></div>
+
+<script>
+document.getElementById('check-insurance-btn').onclick = async function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Sprawdzam...';
+    
+    try {
+        const response = await fetch(btn.dataset.url);
+        const data = await response.json();
+        
+        const resultDiv = document.getElementById('insurance-result');
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-${data.is_valid ? 'success' : 'error'}">
+                    <strong>${data.patient_name}</strong><br>
+                    Status: ${data.insurance_status}<br>
+                    ${data.notes.join('<br>')}
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+        }
+        resultDiv.classList.remove('hidden');
+    } catch (e) {
+        alert('Błąd: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sprawdź ubezpieczenie eWUS';
+    }
+};
+</script>
     {# Dane osobowe #}
     <div class="card bg-base-100 shadow-sm">
       <div class="card-body">

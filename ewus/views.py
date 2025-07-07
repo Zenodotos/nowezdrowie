@@ -3,13 +3,16 @@ from django.contrib.auth.decorators import login_required
 from ewus.utils.ewus_client import EWUSClient   
 from django.http import HttpResponse
 import json
+from .models import EwusAccount
+from users.models import User
+
 
 
 
 # views.py - sesja dla całej zmiany
 @login_required
 def start_ewus_session(request):
-    """Logowanie do eWUS na początek dnia"""
+
     client = EWUSClient(test_environment=True)
     credentials = EWUSClient.create_doctor_credentials(
         domain="15",

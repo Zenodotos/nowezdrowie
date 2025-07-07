@@ -1,22 +1,4 @@
-def get_pesel_info(self, obj):
-        """Wyświetla informacje wyciągnięte z PESEL"""
-        if obj.pesel_encrypted:
-            try:
-                birth_date, gender = Patient.extract_pesel_data(obj.pesel_encrypted)
-                return format_html(
-                    "<strong>Data urodzenia:</strong> {}<br>"
-                    "<strong>Płeć:</strong> {}<br>"
-                    "<strong>PESEL:</strong> {}",
-                    birth_date.strftime("%d.%m.%Y"),
-                    "Kobieta" if gender == 'K' else "Mężczyzna",
-                    obj.get_masked_pesel()
-                )
-            except ValidationError as e:
-                return format_html(
-                    "<span style='color: red;'>Błąd PESEL: {}</span>",
-                    str(e)
-                )
-        return "Brak PESEL"# patients/admin.py
+
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
