@@ -1427,7 +1427,7 @@ class EWUSClient:
             if self.debug:
                 print(f"🔧 DEBUG - Przywrócono sesję: {self.session.session_id}")
                 
-        except (KeyError, ValueError) as e:
+        except Exception as e:
             raise SessionException(f"Błąd przywracania sesji: {str(e)}")
 
 # Przykład użycia

@@ -5,27 +5,15 @@
         <th>
           {% with field="name" %}
             {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" class="link">
                 Imię i nazwisko ▲
               </a>
             {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Imię i nazwisko ▼
               </a>
             {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Imię i nazwisko
               </a>
             {% endif %}
@@ -34,56 +22,32 @@
         <th>
           {% with field="pesel" %}
             {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" class="link">
                 PESEL ▲
               </a>
             {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 PESEL ▼
               </a>
             {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 PESEL
               </a>
             {% endif %}
           {% endwith %}
         </th>
         <th>
-          {% with field="dob" %}
+          {% with field="date_of_birth" %}
             {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" class="link">
                 Data ur. ▲
               </a>
             {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Data ur. ▼
               </a>
             {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Data ur.
               </a>
             {% endif %}
@@ -92,27 +56,15 @@
         <th>
           {% with field="age" %}
             {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" class="link">
                 Wiek ▲
               </a>
             {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Wiek ▼
               </a>
             {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Wiek
               </a>
             {% endif %}
@@ -122,61 +74,21 @@
         <th>
           {% with field="email" %}
             {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" class="link">
                 Email ▲
               </a>
             {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Email ▼
               </a>
             {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
+              <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" class="link">
                 Email
               </a>
             {% endif %}
           {% endwith %}
         </th>
-        <th>
-          {% with field="phone" %}
-            {% if sort == field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort=-{{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Telefon ▲
-              </a>
-            {% elif sort == "-"|add:field %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Telefon ▼
-              </a>
-            {% else %}
-              <a href="#" 
-                 hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ field }}" 
-                 hx-target="#patient-table-container"
-                 hx-push-url="true"
-                 class="link">
-                Telefon
-              </a>
-            {% endif %}
-          {% endwith %}
-        </th>
+        <th>Telefon</th>
         <th>Akcje</th>
       </tr>
     </thead>
@@ -274,11 +186,7 @@
   <div class="mt-6 flex justify-center">
     <div class="btn-group">
       {% if page_obj.has_previous %}
-        <a href="#" 
-           hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" 
-           hx-target="#patient-table-container"
-           hx-push-url="true"
-           class="btn">
+        <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.previous_page_number }}" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -296,11 +204,7 @@
           {% if num == page_obj.number %}
             <button class="btn btn-active">{{ num }}</button>
           {% else %}
-            <a href="#" 
-               hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ num }}" 
-               hx-target="#patient-table-container"
-               hx-push-url="true"
-               class="btn">
+            <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ num }}" class="btn">
               {{ num }}
             </a>
           {% endif %}
@@ -308,11 +212,7 @@
       {% endfor %}
       
       {% if page_obj.has_next %}
-        <a href="#" 
-           hx-get="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" 
-           hx-target="#patient-table-container"
-           hx-push-url="true"
-           class="btn">
+        <a href="{% url 'patients:list' %}?q={{ q }}&sort={{ sort }}&page={{ page_obj.next_page_number }}" class="btn">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>

@@ -11,44 +11,110 @@
   </a>
 </div>
 
-{# Formularz wyszukiwania z HTMX #}
-<div class="mb-6">
-  <div class="form-control">
-    <div class="input-group">
-      <input type="text" 
-             name="q" 
-             value="{{ q }}" 
-             placeholder="Wyszukaj pacjenta po imieniu, nazwisku lub PESEL..."
-             class="input input-bordered flex-1" 
-             autocomplete="off"
-             hx-get="{% url 'patients:list' %}"
-             hx-trigger="input changed delay:500ms, search"
-             hx-target="#patient-table-container"
-             hx-push-url="true"
-             hx-include="[name='sort']"
-             hx-indicator="#search-indicator" />
-      
-      {# Wskaźnik ładowania #}
-      <div id="search-indicator" class="htmx-indicator">
-        <button class="btn btn-square" disabled>
-          <span class="loading loading-spinner loading-sm"></span>
-        </button>
+{# Filtry i wyszukiwanie w stylu visits #}
+<div class="card bg-base-100 shadow-sm mb-6">
+  <div class="card-body">
+    <form method="get" id="filter-form">
+      <div class="flex flex-col lg:flex-row gap-4">
+        
+        {# Wyszukiwanie #}
+        <div class="flex-1">
+          <div class="form-control">
+            <div class="input-group">
+              <input type="text" 
+                     name="q" 
+                     value="{{ q }}" 
+                     placeholder="Szukaj po imieniu, nazwisku lub PESEL..."
+                     class="input input-bordered flex-1" 
+                     autocomplete="off" />
+              
+              <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Szukaj
+              </button>
+              
+              {% if q %}
+              <a href="{% url 'patients:list' %}{% if sort %}?sort={{ sort }}{% endif %}" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Wyczyść
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {# Filtr płci #}
+        <div class="form-control">
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-outline gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Filtruj płeć
+              <div class="badge badge-sm badge-primary" id="gender-filter-count" style="display: none;">0</div>
+            </div>
+            
+            <div tabindex="0" class="dropdown-content card card-compact w-64 p-2 shadow bg-base-100 z-50">
+              <div class="card-body">
+                <h3 class="font-bold text-lg">Filtruj po płci</h3>
+                
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="gender" 
+                             value="M"
+                             class="checkbox checkbox-info gender-checkbox"
+                             onchange="updateGenderFilters()"
+                             {% if 'M' in gender_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-info badge-sm mr-2">Mężczyzna</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-3">
+                      <input type="checkbox" 
+                             name="gender" 
+                             value="K"
+                             class="checkbox checkbox-secondary gender-checkbox"
+                             onchange="updateGenderFilters()"
+                             {% if 'K' in gender_filters %}checked{% endif %}>
+                      <span class="label-text">
+                        <span class="badge badge-secondary badge-sm mr-2">Kobieta</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="divider my-2"></div>
+                
+                <div class="flex gap-2">
+                  <button type="button" class="btn btn-sm btn-ghost flex-1" onclick="clearGenderFilters()">
+                    Wyczyść
+                  </button>
+                  <button type="button" class="btn btn-sm btn-primary flex-1" onclick="document.activeElement.blur()">
+                    Zamknij
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <button type="button" 
-              onclick="document.querySelector('[name=q]').value=''; document.querySelector('[name=q]').dispatchEvent(new Event('input'))"
-              class="btn btn-square"
-              title="Wyczyść wyszukiwanie">
-        ✕
-      </button>
-    </div>
+      {# Ukryte pola #}
+      <input type="hidden" name="sort" value="{{ sort }}">
+    </form>
   </div>
-  
-  {# Ukryte pole do przechowywania aktualnego sortowania #}
-  <input type="hidden" name="sort" value="{{ sort }}">
 </div>
 
-{# Informacje o aktualnym wyszukiwaniu #}
+{# Informacje o wyszukiwaniu #}
 {% if q %}
 <div class="alert alert-info mb-4">
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
@@ -58,84 +124,10 @@
 </div>
 {% endif %}
 
-{# Tabela pacjentów - includujemy partial template #}
-{% include 'patients/patient_table.html' %}
+{# Tabela pacjentów #}
+<div id="patient-table-container" class="min-h-screen">
+  {% include 'patients/patient_table.html' %}
+</div>
 
-{# Style dla wskaźnika ładowania HTMX #}
-<style>
-.htmx-indicator {
-  display: none;
-}
-.htmx-request .htmx-indicator {
-  display: block;
-}
-.htmx-request.htmx-indicator {
-  display: block;
-}
-
-/* Animacja ładowania dla tabeli */
-#patient-table-container.htmx-swapping {
-  opacity: 0.5;
-  transition: opacity 0.2s;
-}
-
-/* Hover efekt dla wierszy tabeli */
-.table tbody tr.hover:hover {
-  background-color: var(--color-base-200);
-}
-
-/* Responsywność tabeli */
-@media (max-width: 768px) {
-  .table {
-    font-size: 0.875rem;
-  }
-  
-  .badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-  }
-}
-</style>
-
-{# JavaScript dla dodatkowych funkcji #}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Obsługa klawisza Escape do czyszczenia wyszukiwania
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      const searchInput = document.querySelector('[name="q"]');
-      if (searchInput && searchInput.value) {
-        searchInput.value = '';
-        searchInput.dispatchEvent(new Event('input'));
-      }
-    }
-  });
-  
-  // Ustawienie fokusa na polu wyszukiwania po załadowaniu
-  const searchInput = document.querySelector('[name="q"]');
-  if (searchInput && !searchInput.value) {
-    searchInput.focus();
-  }
-});
-
-// Obsługa błędów HTMX
-document.addEventListener('htmx:responseError', function(e) {
-  console.error('HTMX Error:', e.detail);
-  // Możesz tutaj dodać toast/notification o błędzie
-});
-
-// Wskaźnik ładowania dla requestów HTMX
-document.addEventListener('htmx:beforeSwap', function(e) {
-  if (e.target.id === 'patient-table-container') {
-    e.target.classList.add('htmx-swapping');
-  }
-});
-
-document.addEventListener('htmx:afterSwap', function(e) {
-  if (e.target.id === 'patient-table-container') {
-    e.target.classList.remove('htmx-swapping');
-  }
-});
-</script>
 
 {% endblock %}
