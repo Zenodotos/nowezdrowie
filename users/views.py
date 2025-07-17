@@ -68,6 +68,8 @@ def setup_2fa_required(request):
             # Zaloguj użytkownika z 2FA
             login(request, user)
             otp_login(request, device)
+
+            request.session.set_expiry(8 * 60 * 60)
             
             del request.session['pre_2fa_user_id']
             messages.success(request, '2FA zostało skonfigurowane i aktywowane!')
@@ -139,6 +141,7 @@ def verify_2fa(request):
                 session_info, status = client.login(credentials)
                 if status == LoginStatus.SUCCESS:
                     request.session['ewus_session'] = client.save_session_to_dict()
+                    print(request.session['ewus_session'])
                     messages.success(request, 'połączono z ewus')
                 else: 
                     messages.successE(request, f'połączono z ewus {status}')

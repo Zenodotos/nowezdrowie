@@ -148,6 +148,7 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
         try:
             from ewus.utils.ewus_client import EWUSClient, InsuranceStatus
             client = EWUSClient(test_environment=True, debug=False)
+            print(self.request.session['ewus_session'])
             client.restore_session(self.request.session['ewus_session'])
             
             pesel = patient.get_decrypted_pesel()
